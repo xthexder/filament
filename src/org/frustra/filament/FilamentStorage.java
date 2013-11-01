@@ -34,5 +34,6 @@ public class FilamentStorage {
 	public FilamentStorage(ClassLoader loader, boolean debug) {
 		this.classLoader = loader;
 		this.debug = debug;
+		FilamentStorage.store = this;
 	}
 }

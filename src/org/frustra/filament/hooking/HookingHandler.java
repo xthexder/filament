@@ -78,7 +78,7 @@ public class HookingHandler {
 							} else if (constant instanceof Type) {
 								node.references.add((Type) constant);
 							}
-						} catch (Exception e) {} // Jump targets are also stored here, which do not point to anything.
+						} catch (Exception e) {}
 					}
 					node.access &= ~(Opcodes.ACC_FINAL | Opcodes.ACC_PROTECTED | Opcodes.ACC_PRIVATE);
 					node.access |= Opcodes.ACC_PUBLIC;
@@ -111,11 +111,11 @@ public class HookingHandler {
 	public static void doHookingPass(Class<?> hookingPass) throws BadHookException {
 		boolean errors = false;
 		for (CustomClassNode node : FilamentStorage.store.classes.values()) {
-			for (String constant : node.constants) {
-				for (ConstantHook hook : FilamentStorage.store.constantHooks) {
+			if (FilamentStorage.store.classHooks.size() > 0) {
+				for (ClassHook hook : FilamentStorage.store.classHooks) {
 					if (hookingPass.isInstance(hook)) {
 						try {
-							hook.doMatch(node, constant);
+							hook.doMatch(node);
 						} catch (Exception e) {
 							e.printStackTrace();
 							errors = true;
@@ -123,26 +123,44 @@ public class HookingHandler {
 					}
 				}
 			}
-			for (FieldNode f : (List<FieldNode>) node.fields) {
-				for (FieldHook hook : FilamentStorage.store.fieldHooks) {
-					if (hookingPass.isInstance(hook)) {
-						try {
-							hook.doMatch(node, f);
-						} catch (Exception e) {
-							e.printStackTrace();
-							errors = true;
+			if (FilamentStorage.store.constantHooks.size() > 0) {
+				for (String constant : node.constants) {
+					for (ConstantHook hook : FilamentStorage.store.constantHooks) {
+						if (hookingPass.isInstance(hook)) {
+							try {
+								hook.doMatch(node, constant);
+							} catch (Exception e) {
+								e.printStackTrace();
+								errors = true;
+							}
 						}
 					}
 				}
 			}
-			for (MethodNode m : (List<MethodNode>) node.methods) {
-				for (MethodHook hook : FilamentStorage.store.methodHooks) {
-					if (hookingPass.isInstance(hook)) {
-						try {
-							hook.doMatch(node, m);
-						} catch (Exception e) {
-							e.printStackTrace();
-							errors = true;
+			if (FilamentStorage.store.fieldHooks.size() > 0) {
+				for (FieldNode f : (List<FieldNode>) node.fields) {
+					for (FieldHook hook : FilamentStorage.store.fieldHooks) {
+						if (hookingPass.isInstance(hook)) {
+							try {
+								hook.doMatch(node, f);
+							} catch (Exception e) {
+								e.printStackTrace();
+								errors = true;
+							}
+						}
+					}
+				}
+			}
+			if (FilamentStorage.store.methodHooks.size() > 0) {
+				for (MethodNode m : (List<MethodNode>) node.methods) {
+					for (MethodHook hook : FilamentStorage.store.methodHooks) {
+						if (hookingPass.isInstance(hook)) {
+							try {
+								hook.doMatch(node, m);
+							} catch (Exception e) {
+								e.printStackTrace();
+								errors = true;
+							}
 						}
 					}
 				}

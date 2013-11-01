@@ -5,19 +5,19 @@ import org.frustra.filament.hooking.CustomClassNode;
 import org.frustra.filament.injection.annotations.AnnotationInjector;
 
 public class InjectionHandler {
-	public static void loadInjectors(Class<ClassInjector>[] injectors) throws InstantiationException, IllegalAccessException {
+	public static void loadInjectors(Class<?>[] injectors) throws InstantiationException, IllegalAccessException {
 		FilamentStorage.store.injectors.clear();
 		FilamentStorage.store.injectors.add(new AnnotationInjector());
-		for (Class<ClassInjector> cls : injectors) {
-			FilamentStorage.store.injectors.add(cls.newInstance());
+		for (Class<?> cls : injectors) {
+			FilamentStorage.store.injectors.add((ClassInjector) cls.newInstance());
 			if (FilamentStorage.store.debug) {
 				System.out.println("Loaded Injector: " + cls.getSimpleName());
 			}
 		}
 	}
 
-	public static CustomClassNode doInjection(CustomClassNode node) {
-		if (node == null) return null;
+	public static void doInjection(CustomClassNode node) {
+		if (node == null) return;
 		for (ClassInjector injector : FilamentStorage.store.injectors) {
 			try {
 				injector.doInject(node);
@@ -25,6 +25,5 @@ public class InjectionHandler {
 				e.printStackTrace();
 			}
 		}
-		return node;
 	}
 }
