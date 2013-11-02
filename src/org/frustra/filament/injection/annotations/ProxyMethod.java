@@ -7,6 +7,8 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface OverrideMethod {
-	String value();
+public @interface ProxyMethod {
+	String classHook();
+
+	String methodHook();
 }

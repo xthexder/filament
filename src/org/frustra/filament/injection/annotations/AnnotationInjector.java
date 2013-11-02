@@ -5,9 +5,13 @@ import java.util.List;
 import org.frustra.filament.hooking.CustomClassNode;
 import org.frustra.filament.injection.ClassInjector;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.TypeInsnNode;
+import org.objectweb.asm.tree.VarInsnNode;
 
 public class AnnotationInjector extends ClassInjector {
 	public boolean match(CustomClassNode node) {
@@ -36,6 +40,43 @@ public class AnnotationInjector extends ClassInjector {
 						m.access = parent.access & ~Opcodes.ACC_ABSTRACT;
 						m.name = parent.name;
 						m.desc = parent.desc;
+					} else if (anno.annotation.equals(ProxyMethod.class.getName())) {
+						CustomClassNode targetNode = (CustomClassNode) anno.getHook("classHook");
+						MethodNode targetMethod = (MethodNode) anno.getHook("methodHook");
+
+						if ((m.access & Opcodes.ACC_STATIC) == 0) {
+							throw new Exception("ProxyMethod annotated methods must be static.");
+						} else if ((m.access & Opcodes.ACC_NATIVE) == 0) {
+							throw new Exception("ProxyMethod annotated methods must be native.");
+						} else m.access &= ~Opcodes.ACC_NATIVE;
+
+						int invokeOpcode = 0;
+						if ((targetMethod.access & Opcodes.ACC_STATIC) != 0) {
+							invokeOpcode = Opcodes.INVOKESTATIC;
+						} else if ((targetNode.access & Opcodes.ACC_INTERFACE) != 0) {
+							invokeOpcode = Opcodes.INVOKEINTERFACE;
+						} else if (targetMethod.name.startsWith("<")) {
+							invokeOpcode = Opcodes.INVOKESPECIAL;
+						} else {
+							invokeOpcode = Opcodes.INVOKEVIRTUAL;
+						}
+
+						int paramid = 0;
+						m.instructions.clear();
+						if (invokeOpcode != Opcodes.INVOKESTATIC) {
+							m.instructions.add(new VarInsnNode(Opcodes.ALOAD, paramid++));
+							m.instructions.add(new TypeInsnNode(Opcodes.CHECKCAST, targetNode.name));
+						}
+						for (Type param : Type.getArgumentTypes(targetMethod.desc)) {
+							int opcode = param.getOpcode(Opcodes.ILOAD);
+							m.instructions.add(new VarInsnNode(opcode, paramid++));
+							if (opcode == Opcodes.ALOAD) {
+								m.instructions.add(new TypeInsnNode(Opcodes.CHECKCAST, param.getInternalName()));
+							}
+						}
+						m.instructions.add(new MethodInsnNode(invokeOpcode, targetNode.name, targetMethod.name, targetMethod.desc));
+						Type ret = Type.getReturnType(targetMethod.desc);
+						m.instructions.add(new InsnNode(ret.getOpcode(Opcodes.IRETURN)));
 					}
 				} catch (Exception e) {
 					e.printStackTrace();

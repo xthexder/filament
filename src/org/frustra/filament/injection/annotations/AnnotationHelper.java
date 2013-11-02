@@ -12,6 +12,7 @@ import org.objectweb.asm.tree.MethodNode;
 public class AnnotationHelper {
 	public String annotation;
 	public HashMap<String, Object> values = new HashMap<String, Object>();
+	public static String hookPackage = null;
 
 	public AnnotationHelper(AnnotationNode node) {
 		annotation = Type.getType(node.desc).getClassName();
@@ -41,11 +42,15 @@ public class AnnotationHelper {
 	}
 
 	public Object getHook() {
+		return getHook("value");
+	}
+
+	public Object getHook(String name) {
 		try {
-			Type hook = (Type) values.get("hook");
-			String field = (String) values.get("field");
-			Class<?> cls = FilamentStorage.store.classLoader.loadClass(hook.getClassName());
-			Field f = cls.getDeclaredField(field);
+			String[] hook = ((String) values.get(name)).split("\\.");
+			if (hook.length != 2) return null;
+			Class<?> cls = FilamentStorage.store.classLoader.loadClass(hookPackage + "." + hook[0]);
+			Field f = cls.getDeclaredField(hook[1]);
 			f.setAccessible(true);
 			return f.get(null);
 		} catch (Exception e) {

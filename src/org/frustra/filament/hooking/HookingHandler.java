@@ -19,6 +19,7 @@ import org.frustra.filament.hooking.types.HookingPassOne;
 import org.frustra.filament.hooking.types.HookingPassThree;
 import org.frustra.filament.hooking.types.HookingPassTwo;
 import org.frustra.filament.hooking.types.MethodHook;
+import org.frustra.filament.injection.annotations.AnnotationHelper;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -26,7 +27,7 @@ import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
 public class HookingHandler {
-	public static void loadHooks(Class<?>[] hooks) throws InstantiationException, IllegalAccessException {
+	public static void loadHooks(Class<?>[] hooks) throws InstantiationException, IllegalAccessException, BadHookException {
 		FilamentStorage.store.passTwoHooks = 0;
 		FilamentStorage.store.passThreeHooks = 0;
 		for (Class<?> cls : hooks) {
@@ -49,12 +50,18 @@ public class HookingHandler {
 				}
 				FilamentStorage.store.allHooks.add((HookingPass) hook);
 			}
+
+			String pack = cls.getName().substring(0, cls.getName().lastIndexOf('.'));
+			if (AnnotationHelper.hookPackage == null) {
+				AnnotationHelper.hookPackage = pack;
+			} else if (!AnnotationHelper.hookPackage.equals(pack)) throw new BadHookException("Having hooks in multiple packages is not supported", hook);
+
 			if (FilamentStorage.store.debug) {
 				System.out.println("Loaded Hook: " + cls.getSimpleName());
 			}
 		}
 	}
-	
+
 	public static void loadJar(JarFile jar) {
 		loadJar(jar, FilamentStorage.store.classes);
 	}
@@ -106,7 +113,7 @@ public class HookingHandler {
 			doHookingPass(HookingPassThree.class);
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public static void doHookingPass(Class<?> hookingPass) throws BadHookException {
 		boolean errors = false;
