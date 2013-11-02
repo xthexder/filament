@@ -33,6 +33,7 @@ public class AnnotationInjector extends ClassInjector {
 						}
 					} else if (anno.annotation.equals(OverrideMethod.class.getName())) {
 						MethodNode parent = (MethodNode) anno.getHook();
+						m.access = parent.access & ~Opcodes.ACC_ABSTRACT;
 						m.name = parent.name;
 						m.desc = parent.desc;
 					}
