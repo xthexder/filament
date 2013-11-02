@@ -46,9 +46,7 @@ public class AnnotationInjector extends ClassInjector {
 
 						if ((m.access & Opcodes.ACC_STATIC) == 0) {
 							throw new Exception("ProxyMethod annotated methods must be static.");
-						} else if ((m.access & Opcodes.ACC_NATIVE) == 0) {
-							throw new Exception("ProxyMethod annotated methods must be native.");
-						} else m.access &= ~Opcodes.ACC_NATIVE;
+						}
 
 						int invokeOpcode = 0;
 						if ((targetMethod.access & Opcodes.ACC_STATIC) != 0) {
