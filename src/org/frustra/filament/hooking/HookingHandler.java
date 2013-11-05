@@ -1,13 +1,9 @@
 package org.frustra.filament.hooking;
 
-import java.io.IOException;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 import org.frustra.filament.FilamentStorage;
 import org.frustra.filament.hooking.types.ClassHook;
@@ -20,8 +16,6 @@ import org.frustra.filament.hooking.types.HookingPassThree;
 import org.frustra.filament.hooking.types.HookingPassTwo;
 import org.frustra.filament.hooking.types.MethodHook;
 import org.frustra.filament.injection.annotations.AnnotationHelper;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -65,42 +59,6 @@ public class HookingHandler {
 			Method doHooking = cls.getDeclaredMethod("doHooking");
 			doHooking.invoke(null);
 		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	public static void loadJar(JarFile jar) {
-		loadJar(jar, FilamentStorage.store.classes);
-	}
-
-	public static void loadJar(JarFile jar, HashMap<String, CustomClassNode> classes) {
-		try {
-			classes.clear();
-			Enumeration<JarEntry> entries = jar.entries();
-			while (entries.hasMoreElements()) {
-				JarEntry entry = entries.nextElement();
-				if (entry != null && entry.getName().endsWith(".class")) {
-					CustomClassNode node = new CustomClassNode();
-					ClassReader reader = new ClassReader(jar.getInputStream(entry));
-					reader.accept(node, ClassReader.SKIP_DEBUG);
-					char[] buf = new char[reader.getMaxStringLength()];
-					for (int i = 0; i < reader.getItemCount(); i++) {
-						try {
-							Object constant = reader.readConst(i, buf);
-							if (constant instanceof String) {
-								node.constants.add((String) constant);
-							} else if (constant instanceof Type) {
-								node.references.add((Type) constant);
-							}
-						} catch (Exception e) {}
-					}
-					node.access &= ~(Opcodes.ACC_FINAL | Opcodes.ACC_PROTECTED | Opcodes.ACC_PRIVATE);
-					node.access |= Opcodes.ACC_PUBLIC;
-					String name = node.name.replaceAll("/", ".");
-					classes.put(name, node);
-				}
-			}
-		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
@@ -194,6 +152,22 @@ public class HookingHandler {
 			throw new BadHookException("Errors occured while processing " + hookingPass.getSimpleName(), null);
 		}
 	}
+	
+	public static Class<?> lookupType(Type type) {
+		try {
+			String baseType = type.getClassName().replaceAll("\\[\\]", "");
+			Class<?> cls = FilamentStorage.store.classLoader.loadClass(baseType);
+			int dimensions = 0;
+			try {
+				if (type.getClassName().contains("[]")) dimensions = type.getDimensions();
+			} catch (Exception e) {}
+			if (dimensions > 0) cls = Array.newInstance(cls, new int[dimensions]).getClass();
+			return cls;
+		} catch (Throwable e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 
 	public static Class<?> lookupClass(CustomClassNode node) {
 		try {
@@ -222,12 +196,13 @@ public class HookingHandler {
 			Type[] params = Type.getArgumentTypes(method.desc);
 			Class<?>[] params2 = new Class<?>[params.length];
 			for (int i = 0; i < params.length; i++) {
-				params2[i] = cls.getClassLoader().loadClass(params[i].getClassName());
+				params2[i] = lookupType(params[i]);
 			}
 			Method m = cls.getDeclaredMethod(method.name, params2);
 			m.setAccessible(true);
 			return m;
 		} catch (Throwable e) {
+			e.printStackTrace();
 			return null;
 		}
 	}
