@@ -60,6 +60,13 @@ public class HookingHandler {
 				System.out.println("Loaded Hook: " + cls.getSimpleName());
 			}
 		}
+		try {
+			Class<?> cls = FilamentStorage.store.classLoader.loadClass(HookingHandler.class.getName());
+			Method doHooking = cls.getDeclaredMethod("doHooking");
+			doHooking.invoke(null);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void loadJar(JarFile jar) {
@@ -226,7 +233,7 @@ public class HookingHandler {
 	}
 
 	public static CustomClassNode getClassNode(String name) {
-		CustomClassNode node = FilamentStorage.store.classes.get(name);
+		CustomClassNode node = FilamentStorage.store.classes.get(name.replace('.', '/'));
 		return node;
 	}
 

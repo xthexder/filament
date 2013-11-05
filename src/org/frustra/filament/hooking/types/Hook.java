@@ -38,9 +38,10 @@ public abstract class Hook {
 
 	protected void assertValid() throws BadHookException {
 		if (!valid) {
-			if (matched) throw new BadHookException("Hook found multiple matches", this, error);
-			else throw new BadHookException("Error in matcher", this, error);
-		} else if (!matched) throw new BadHookException("No matches found", this, error);
+			if (error != null) throw new BadHookException("Error in matcher", this, error);
+			else if (matched) throw new BadHookException("Hook found multiple matches", this);
+			else throw new BadHookException("Unknown error, hook invalid", this);
+		} else if (!matched) throw new BadHookException("No matches found", this);
 	}
 
 	public String toString() {
