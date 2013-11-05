@@ -1,5 +1,6 @@
 package org.frustra.filament.hooking;
 
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -21,10 +22,13 @@ import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
 public class HookingHandler {
-	public static void loadHooks(Class<?>[] hooks) throws InstantiationException, IllegalAccessException, BadHookException {
+	public static void loadHooks(String packageName) throws InstantiationException, IllegalAccessException, BadHookException, ClassNotFoundException, IOException {
+		AnnotationHelper.hookPackage = packageName;
+		String[] hooks = FilamentStorage.store.classLoader.listPackage(packageName);
 		FilamentStorage.store.passTwoHooks = 0;
 		FilamentStorage.store.passThreeHooks = 0;
-		for (Class<?> cls : hooks) {
+		for (String name : hooks) {
+			Class<?> cls = FilamentStorage.store.classLoader.loadClass(name);
 			Hook hook = (Hook) cls.newInstance();
 			if (hook instanceof MethodHook) {
 				FilamentStorage.store.methodHooks.add((MethodHook) hook);
@@ -45,11 +49,6 @@ public class HookingHandler {
 				FilamentStorage.store.allHooks.add((HookingPass) hook);
 			}
 
-			String pack = cls.getName().substring(0, cls.getName().lastIndexOf('.'));
-			if (AnnotationHelper.hookPackage == null) {
-				AnnotationHelper.hookPackage = pack;
-			} else if (!AnnotationHelper.hookPackage.equals(pack)) throw new BadHookException("Having hooks in multiple packages is not supported", hook);
-
 			if (FilamentStorage.store.debug) {
 				System.out.println("Loaded Hook: " + cls.getSimpleName());
 			}
@@ -64,6 +63,11 @@ public class HookingHandler {
 	}
 
 	public static void doHooking() throws BadHookException {
+		if (FilamentStorage.store.debug) {
+			System.out.println();
+			System.out.println("=== Executing Hooks ===");
+		}
+
 		for (HookingPass hook : FilamentStorage.store.allHooks) {
 			hook.reset();
 		}
@@ -76,6 +80,11 @@ public class HookingHandler {
 
 		if (FilamentStorage.store.passThreeHooks > 0) {
 			doHookingPass(HookingPassThree.class);
+		}
+
+		if (FilamentStorage.store.debug) {
+			System.out.println("=== Hooking Complete ===");
+			System.out.println();
 		}
 	}
 
@@ -152,7 +161,7 @@ public class HookingHandler {
 			throw new BadHookException("Errors occured while processing " + hookingPass.getSimpleName(), null);
 		}
 	}
-	
+
 	public static Class<?> lookupType(Type type) {
 		try {
 			String baseType = type.getClassName().replaceAll("\\[\\]", "");

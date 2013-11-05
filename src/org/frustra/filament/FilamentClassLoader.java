@@ -2,6 +2,7 @@ package org.frustra.filament;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -9,18 +10,16 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import org.frustra.filament.FilamentStorage;
 import org.frustra.filament.hooking.CustomClassNode;
 import org.frustra.filament.injection.InjectionHandler;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
 
 public abstract class FilamentClassLoader extends URLClassLoader {
 	public FilamentStorage filament;
@@ -44,22 +43,7 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 			while (entries.hasMoreElements()) {
 				JarEntry entry = entries.nextElement();
 				if (entry != null && entry.getName().endsWith(".class")) {
-					CustomClassNode node = new CustomClassNode();
-					ClassReader reader = new ClassReader(jar.getInputStream(entry));
-					reader.accept(node, ClassReader.SKIP_DEBUG);
-					char[] buf = new char[reader.getMaxStringLength()];
-					for (int i = 0; i < reader.getItemCount(); i++) {
-						try {
-							Object constant = reader.readConst(i, buf);
-							if (constant instanceof String) {
-								node.constants.add((String) constant);
-							} else if (constant instanceof Type) {
-								node.references.add((Type) constant);
-							}
-						} catch (Exception e) {}
-					}
-					node.access &= ~(Opcodes.ACC_FINAL | Opcodes.ACC_PROTECTED | Opcodes.ACC_PRIVATE);
-					node.access |= Opcodes.ACC_PUBLIC;
+					CustomClassNode node = CustomClassNode.loadFromStream(jar.getInputStream(entry));
 					String name = node.name.replaceAll("/", ".");
 					filament.classes.put(name, node);
 				}
@@ -68,6 +52,54 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 		} finally {
 			jar.close();
 		}
+	}
+
+	public void loadPackage(String packageName) throws IOException, ClassNotFoundException {
+		String[] classes = listPackage(packageName);
+		for (String name : classes) {
+			InputStream stream = FilamentClassLoader.class.getResourceAsStream("/" + name.replace('.', '/') + ".class");
+			CustomClassNode node = CustomClassNode.loadFromStream(stream);
+			filament.classes.put(name, node);
+		}
+	}
+
+	public String[] listPackage(String packageName) throws IOException, ClassNotFoundException {
+		ArrayList<String> classes = new ArrayList<String>();
+		URL packageURL = FilamentClassLoader.class.getResource("/" + packageName.replace('.', '/'));
+		if (packageURL.getProtocol().equals("file")) {
+			File packageFolder = new File(packageURL.getFile());
+			for (File f : packageFolder.listFiles()) {
+				String name = f.getName();
+				if (f.isFile() && !name.startsWith(".") && name.endsWith(".class")) {
+					FileInputStream stream = new FileInputStream(f);
+					ClassReader reader = new ClassReader(stream);
+					stream.close();
+					classes.add(reader.getClassName().replace('/', '.'));
+				}
+			}
+		} else if (packageURL.getProtocol().equals("jar")) {
+			String jarPath = packageURL.getFile();
+			jarPath = jarPath.substring(5, jarPath.indexOf("!/"));
+			JarFile file = new JarFile(jarPath);
+			Enumeration<? extends JarEntry> entries = file.entries();
+			while (entries.hasMoreElements()) {
+				JarEntry entry = entries.nextElement();
+				if (entry == null || entry.isDirectory()) continue;
+				String entryPath = entry.getName();
+				String fileName = entryPath.substring(entryPath.lastIndexOf("/") + 1);
+
+				if (fileName.endsWith(".class")) {
+					ClassReader reader = new ClassReader(file.getInputStream(entry));
+					String className = reader.getClassName().replace('/', '.');
+					String packageName2 = className.substring(0, className.lastIndexOf('.'));
+					if (packageName.equals(packageName2)) classes.add(className);
+				}
+			}
+			file.close();
+		} else {
+			System.out.println("Unsupported protocol: " + packageURL.getProtocol());
+		}
+		return classes.toArray(new String[0]);
 	}
 
 	protected Class<?> getPrimitiveType(String name) throws ClassNotFoundException {
@@ -94,7 +126,7 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 		}
 		return cls;
 	}
-	
+
 	protected abstract Class<?> defineClass(String name, byte[] buf);
 
 	private Class<?> defineClass(String name) throws ClassNotFoundException {

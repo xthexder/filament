@@ -1,14 +1,18 @@
 package org.frustra.filament.injection;
 
+import java.io.IOException;
+
 import org.frustra.filament.FilamentStorage;
 import org.frustra.filament.hooking.CustomClassNode;
 import org.frustra.filament.injection.annotations.AnnotationInjector;
 
 public class InjectionHandler {
-	public static void loadInjectors(Class<?>[] injectors) throws InstantiationException, IllegalAccessException {
+	public static void loadInjectors(String packageName) throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException {
+		String[] injectors = FilamentStorage.store.classLoader.listPackage(packageName);
 		FilamentStorage.store.injectors.clear();
 		FilamentStorage.store.injectors.add(new AnnotationInjector());
-		for (Class<?> cls : injectors) {
+		for (String name : injectors) {
+			Class<?> cls = FilamentStorage.store.classLoader.loadClass(name);
 			FilamentStorage.store.injectors.add((ClassInjector) cls.newInstance());
 			if (FilamentStorage.store.debug) {
 				System.out.println("Loaded Injector: " + cls.getSimpleName());

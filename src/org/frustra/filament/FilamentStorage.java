@@ -19,7 +19,7 @@ public class FilamentStorage {
 	public HashMap<String, CustomClassNode> classes = new HashMap<String, CustomClassNode>();
 	public HashMap<String, String> urlconfig = new HashMap<String, String>();
 
-	public ClassLoader classLoader = null;
+	public FilamentClassLoader classLoader = null;
 
 	public int passTwoHooks = 0;
 	public int passThreeHooks = 0;
@@ -31,7 +31,7 @@ public class FilamentStorage {
 
 	public ArrayList<ClassInjector> injectors = new ArrayList<ClassInjector>();
 
-	public FilamentStorage(ClassLoader loader, boolean debug) {
+	public FilamentStorage(FilamentClassLoader loader, boolean debug) {
 		this.classLoader = loader;
 		this.debug = debug;
 		FilamentStorage.store = this;
