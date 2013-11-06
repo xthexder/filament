@@ -37,6 +37,12 @@ public class CustomClassNode extends ClassNode {
 		if (obj == null) return false;
 		if (obj instanceof CustomClassNode) {
 			return this.name.equals(((CustomClassNode) obj).name);
+		} else if (obj instanceof Type) {
+			String typeName = null;
+			try {
+				typeName = ((Type) obj).getInternalName();
+			} catch (Exception e) {}
+			return this.name.equals(typeName);
 		} else return false;
 	}
 

@@ -1,9 +1,7 @@
 package org.frustra.filament.injection.annotations;
 
-import java.lang.reflect.Field;
 import java.util.HashMap;
 
-import org.frustra.filament.FilamentStorage;
 import org.frustra.filament.hooking.CustomClassNode;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
@@ -41,20 +39,7 @@ public class AnnotationHelper {
 		return annos;
 	}
 
-	public Object getHook() {
-		return getHook("value");
-	}
-
-	public Object getHook(String name) {
-		try {
-			String[] hook = ((String) values.get(name)).split("\\.");
-			if (hook.length != 2) return null;
-			Class<?> cls = FilamentStorage.store.classLoader.loadClass(hookPackage + "." + hook[0]);
-			Field f = cls.getDeclaredField(hook[1]);
-			f.setAccessible(true);
-			return f.get(null);
-		} catch (Exception e) {
-			return null;
-		}
+	public String getValue() {
+		return (String) values.get("value");
 	}
 }

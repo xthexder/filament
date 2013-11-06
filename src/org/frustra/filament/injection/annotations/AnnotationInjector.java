@@ -3,6 +3,7 @@ package org.frustra.filament.injection.annotations;
 import java.util.List;
 
 import org.frustra.filament.hooking.CustomClassNode;
+import org.frustra.filament.hooking.Hooks;
 import org.frustra.filament.injection.ClassInjector;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -30,19 +31,20 @@ public class AnnotationInjector extends ClassInjector {
 							if (insn.getOpcode() == Opcodes.INVOKESPECIAL) {
 								MethodInsnNode minsn = (MethodInsnNode) insn;
 								if (minsn.owner.equals(node.superName)) {
-									minsn.owner = ((CustomClassNode) anno.getHook()).name;
+									minsn.owner = Hooks.getClassName(anno.getValue());
 								}
 							}
 							insn = insn.getNext();
 						}
 					} else if (anno.annotation.equals(OverrideMethod.class.getName())) {
-						MethodNode parent = (MethodNode) anno.getHook();
+						MethodNode parent = Hooks.getMethod(anno.getValue());
 						m.access = parent.access & ~Opcodes.ACC_ABSTRACT;
 						m.name = parent.name;
 						m.desc = parent.desc;
 					} else if (anno.annotation.equals(ProxyMethod.class.getName())) {
-						CustomClassNode targetNode = (CustomClassNode) anno.getHook("classHook");
-						MethodNode targetMethod = (MethodNode) anno.getHook("methodHook");
+						String hook = anno.getValue();
+						CustomClassNode targetNode = Hooks.getClass(hook.substring(0, hook.lastIndexOf('.')));
+						MethodNode targetMethod = Hooks.getMethod(hook);
 
 						if ((m.access & Opcodes.ACC_STATIC) == 0) {
 							throw new Exception("ProxyMethod annotated methods must be static.");
@@ -86,7 +88,7 @@ public class AnnotationInjector extends ClassInjector {
 		for (AnnotationHelper anno : annos) {
 			try {
 				if (anno.annotation.equals(ReplaceSuperClass.class.getName())) {
-					node.superName = ((CustomClassNode) anno.getHook()).name;
+					node.superName = Hooks.getClassName(anno.getValue());
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

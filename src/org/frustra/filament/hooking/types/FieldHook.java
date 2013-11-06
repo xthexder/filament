@@ -13,9 +13,8 @@ public abstract class FieldHook extends ClassHook {
 
 	protected abstract boolean match(CustomClassNode node, FieldNode f);
 
-	protected void onComplete(CustomClassNode node, FieldNode f) {
-		onComplete(node);
-	}
+	protected void onComplete(CustomClassNode node) {}
+	protected abstract void onComplete(CustomClassNode node, FieldNode f);
 
 	public void reset() {
 		super.reset();
@@ -45,6 +44,7 @@ public abstract class FieldHook extends ClassHook {
 		if (completed) return;
 		assertValid();
 		completed = true;
+		onComplete(cNode);
 		onComplete(cNode, cField);
 	}
 }

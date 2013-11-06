@@ -9,7 +9,7 @@ public abstract class ClassHook extends Hook {
 
 	protected abstract boolean match(CustomClassNode node);
 
-	protected void onComplete(CustomClassNode node) {}
+	protected abstract void onComplete(CustomClassNode node);
 
 	public void reset() {
 		super.reset();

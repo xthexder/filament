@@ -16,41 +16,44 @@ import org.frustra.filament.hooking.types.HookingPassOne;
 import org.frustra.filament.hooking.types.HookingPassThree;
 import org.frustra.filament.hooking.types.HookingPassTwo;
 import org.frustra.filament.hooking.types.MethodHook;
-import org.frustra.filament.injection.annotations.AnnotationHelper;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
 public class HookingHandler {
+	public static String hooksPackage = null;
+	
 	public static void loadHooks(String packageName) throws InstantiationException, IllegalAccessException, BadHookException, ClassNotFoundException, IOException {
-		AnnotationHelper.hookPackage = packageName;
+		HookingHandler.hooksPackage = packageName;
 		String[] hooks = FilamentStorage.store.classLoader.listPackage(packageName);
 		FilamentStorage.store.passTwoHooks = 0;
 		FilamentStorage.store.passThreeHooks = 0;
 		for (String name : hooks) {
 			Class<?> cls = FilamentStorage.store.classLoader.loadClass(name);
-			Hook hook = (Hook) cls.newInstance();
-			if (hook instanceof MethodHook) {
-				FilamentStorage.store.methodHooks.add((MethodHook) hook);
-			} else if (hook instanceof FieldHook) {
-				FilamentStorage.store.fieldHooks.add((FieldHook) hook);
-			} else if (hook instanceof ConstantHook) {
-				FilamentStorage.store.constantHooks.add((ConstantHook) hook);
-			} else if (hook instanceof ClassHook) {
-				FilamentStorage.store.classHooks.add((ClassHook) hook);
-			}
-			if (hook instanceof HookingPass) {
-				if (hook instanceof HookingPassTwo) {
-					FilamentStorage.store.passTwoHooks++;
+			if (Hook.class.isAssignableFrom(cls)) {
+				Hook hook = (Hook) cls.newInstance();
+				if (hook instanceof MethodHook) {
+					FilamentStorage.store.methodHooks.add((MethodHook) hook);
+				} else if (hook instanceof FieldHook) {
+					FilamentStorage.store.fieldHooks.add((FieldHook) hook);
+				} else if (hook instanceof ConstantHook) {
+					FilamentStorage.store.constantHooks.add((ConstantHook) hook);
+				} else if (hook instanceof ClassHook) {
+					FilamentStorage.store.classHooks.add((ClassHook) hook);
 				}
-				if (hook instanceof HookingPassThree) {
-					FilamentStorage.store.passThreeHooks++;
+				if (hook instanceof HookingPass) {
+					if (hook instanceof HookingPassTwo) {
+						FilamentStorage.store.passTwoHooks++;
+					}
+					if (hook instanceof HookingPassThree) {
+						FilamentStorage.store.passThreeHooks++;
+					}
+					FilamentStorage.store.allHooks.add((HookingPass) hook);
 				}
-				FilamentStorage.store.allHooks.add((HookingPass) hook);
-			}
 
-			if (FilamentStorage.store.debug) {
-				System.out.println("Loaded Hook: " + cls.getSimpleName());
+				if (FilamentStorage.store.debug) {
+					System.out.println("Loaded Hook: " + cls.getSimpleName());
+				}
 			}
 		}
 		try {
@@ -65,7 +68,7 @@ public class HookingHandler {
 	public static void doHooking() throws BadHookException {
 		if (FilamentStorage.store.debug) {
 			System.out.println();
-			System.out.println("=== Executing Hooks ===");
+			System.out.println("Executing hooks...");
 		}
 
 		for (HookingPass hook : FilamentStorage.store.allHooks) {
@@ -83,7 +86,8 @@ public class HookingHandler {
 		}
 
 		if (FilamentStorage.store.debug) {
-			System.out.println("=== Hooking Complete ===");
+			Hooks.outputHooks();
+			System.out.println("Hooking complete");
 			System.out.println();
 		}
 	}
@@ -186,6 +190,10 @@ public class HookingHandler {
 			return null;
 		}
 	}
+	
+	public static Field lookupField(String hook) {
+		return lookupField(Hooks.getClass(hook.substring(0, hook.lastIndexOf('.'))), Hooks.getField(hook));
+	}
 
 	public static Field lookupField(CustomClassNode node, FieldNode field) {
 		try {
@@ -197,6 +205,10 @@ public class HookingHandler {
 			e.printStackTrace();
 			return null;
 		}
+	}
+	
+	public static Method lookupMethod(String hook) {
+		return lookupMethod(Hooks.getClass(hook.substring(0, hook.lastIndexOf('.'))), Hooks.getMethod(hook));
 	}
 
 	public static Method lookupMethod(CustomClassNode node, MethodNode method) {
@@ -254,8 +266,20 @@ public class HookingHandler {
 		return a.name.equals(b.name) && a.desc.equals(b.desc);
 	}
 
+	public static boolean compareFieldNode(FieldNode f, String hook) {
+		return compareFieldNode(f, Hooks.getField(hook));
+	}
+
 	public static boolean compareMethodNode(MethodNode a, MethodNode b) {
 		if (a == null || b == null) return false;
 		return a.name.equals(b.name) && a.desc.equals(b.desc);
+	}
+
+	public static boolean compareMethodNode(MethodNode m, String hook) {
+		return compareMethodNode(m, Hooks.getMethod(hook));
+	}
+
+	public static boolean compareType(Type type, String hook) {
+		return Hooks.getClass(hook).equals(type);
 	}
 }

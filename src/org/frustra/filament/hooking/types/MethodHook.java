@@ -13,9 +13,8 @@ public abstract class MethodHook extends ClassHook {
 
 	protected abstract boolean match(CustomClassNode node, MethodNode m);
 
-	protected void onComplete(CustomClassNode node, MethodNode m) {
-		onComplete(node);
-	}
+	protected void onComplete(CustomClassNode node) {}
+	protected abstract void onComplete(CustomClassNode node, MethodNode m);
 
 	public void reset() {
 		super.reset();
@@ -45,6 +44,7 @@ public abstract class MethodHook extends ClassHook {
 		if (completed) return;
 		assertValid();
 		completed = true;
+		onComplete(cNode);
 		onComplete(cNode, cMethod);
 	}
 }
