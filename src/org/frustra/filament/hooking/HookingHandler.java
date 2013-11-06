@@ -15,8 +15,10 @@ import org.frustra.filament.hooking.types.HookingPass;
 import org.frustra.filament.hooking.types.HookingPassOne;
 import org.frustra.filament.hooking.types.HookingPassThree;
 import org.frustra.filament.hooking.types.HookingPassTwo;
+import org.frustra.filament.hooking.types.InstructionHook;
 import org.frustra.filament.hooking.types.MethodHook;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -32,7 +34,9 @@ public class HookingHandler {
 			Class<?> cls = FilamentStorage.store.classLoader.loadClass(name);
 			if (Hook.class.isAssignableFrom(cls)) {
 				Hook hook = (Hook) cls.newInstance();
-				if (hook instanceof MethodHook) {
+				if (hook instanceof InstructionHook) {
+					FilamentStorage.store.instructionHooks.add((InstructionHook) hook);
+				} else if (hook instanceof MethodHook) {
 					FilamentStorage.store.methodHooks.add((MethodHook) hook);
 				} else if (hook instanceof FieldHook) {
 					FilamentStorage.store.fieldHooks.add((FieldHook) hook);
@@ -137,16 +141,35 @@ public class HookingHandler {
 					}
 				}
 			}
-			if (FilamentStorage.store.methodHooks.size() > 0) {
+			if (FilamentStorage.store.methodHooks.size() > 0 || FilamentStorage.store.instructionHooks.size() > 0) {
 				for (MethodNode m : (List<MethodNode>) node.methods) {
-					for (MethodHook hook : FilamentStorage.store.methodHooks) {
-						if (hookingPass.isInstance(hook)) {
-							try {
-								hook.doMatch(node, m);
-							} catch (Exception e) {
-								e.printStackTrace();
-								errors = true;
+					if (FilamentStorage.store.methodHooks.size() > 0) {
+						for (MethodHook hook : FilamentStorage.store.methodHooks) {
+							if (hookingPass.isInstance(hook)) {
+								try {
+									hook.doMatch(node, m);
+								} catch (Exception e) {
+									e.printStackTrace();
+									errors = true;
+								}
 							}
+						}
+					}
+
+					if (FilamentStorage.store.instructionHooks.size() > 0) {
+						AbstractInsnNode insn = m.instructions.getFirst();
+						while (insn != null) {
+							for (InstructionHook hook : FilamentStorage.store.instructionHooks) {
+								if (hookingPass.isInstance(hook)) {
+									try {
+										hook.doMatch(node, m, insn);
+									} catch (Exception e) {
+										e.printStackTrace();
+										errors = true;
+									}
+								}
+							}
+							insn = insn.getNext();
 						}
 					}
 				}

@@ -8,6 +8,7 @@ import org.frustra.filament.hooking.types.ClassHook;
 import org.frustra.filament.hooking.types.ConstantHook;
 import org.frustra.filament.hooking.types.FieldHook;
 import org.frustra.filament.hooking.types.HookingPass;
+import org.frustra.filament.hooking.types.InstructionHook;
 import org.frustra.filament.hooking.types.MethodHook;
 import org.frustra.filament.injection.ClassInjector;
 
@@ -28,6 +29,7 @@ public class FilamentStorage {
 	public ArrayList<ConstantHook> constantHooks = new ArrayList<ConstantHook>();
 	public ArrayList<FieldHook> fieldHooks = new ArrayList<FieldHook>();
 	public ArrayList<MethodHook> methodHooks = new ArrayList<MethodHook>();
+	public ArrayList<InstructionHook> instructionHooks = new ArrayList<InstructionHook>();
 
 	public ArrayList<ClassInjector> injectors = new ArrayList<ClassInjector>();
 
