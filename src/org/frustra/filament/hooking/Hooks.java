@@ -9,6 +9,10 @@ import org.objectweb.asm.tree.MethodNode;
 public class Hooks {
 	private static HashMap<String, Object> hooks = new HashMap<String, Object>();
 	
+	public static void reset() {
+		hooks.clear();
+	}
+	
 	public static void outputHooks() {
 		try {
 			for (Entry<String, Object> entry : hooks.entrySet()) {

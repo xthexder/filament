@@ -74,6 +74,7 @@ public class HookingHandler {
 		for (HookingPass hook : FilamentStorage.store.allHooks) {
 			hook.reset();
 		}
+		Hooks.reset();
 
 		doHookingPass(HookingPassOne.class);
 
