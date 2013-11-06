@@ -45,6 +45,7 @@ public class Hooks {
 	public static String getClassName(String name) { return ((CustomClassNode) get(name)).name; }
 	public static FieldNode getField(String name) { return (FieldNode) get(name); }
 	public static MethodNode getMethod(String name) { return (MethodNode) get(name); }
+	public static String getString(String name) { return (String) get(name); }
 	
 	public static Object get(String name) {
 		return hooks.get(name);

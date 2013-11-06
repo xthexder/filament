@@ -34,38 +34,49 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 		this.filament = new FilamentStorage(this, debug);
 		this.parent = parent;
 	}
-
+	
 	public void loadJar(File jarFile) throws IOException {
 		JarFile jar = new JarFile(jarFile);
 		try {
-			filament.classes.clear();
-			Enumeration<JarEntry> entries = jar.entries();
-			while (entries.hasMoreElements()) {
-				JarEntry entry = entries.nextElement();
-				if (entry != null && entry.getName().endsWith(".class")) {
-					CustomClassNode node = CustomClassNode.loadFromStream(jar.getInputStream(entry));
-					String name = node.name.replaceAll("/", ".");
-					filament.classes.put(name, node);
-				}
-			}
-			addURL(jarFile.toURI().toURL());
+			loadJar(jar, jarFile.toURI().toURL());
 		} finally {
 			jar.close();
 		}
 	}
 
+	public void loadJar(JarFile jar, URL url) throws IOException {
+		Enumeration<JarEntry> entries = jar.entries();
+		while (entries.hasMoreElements()) {
+			JarEntry entry = entries.nextElement();
+			if (entry != null && entry.getName().endsWith(".class")) {
+				CustomClassNode node = CustomClassNode.loadFromStream(jar.getInputStream(entry));
+				String name = node.name.replaceAll("/", ".");
+				filament.classes.put(name, node);
+			}
+		}
+		if (url != null) addURL(url);
+	}
+
 	public void loadPackage(String packageName) throws IOException, ClassNotFoundException {
 		String[] classes = listPackage(packageName);
 		for (String name : classes) {
-			InputStream stream = FilamentClassLoader.class.getResourceAsStream("/" + name.replace('.', '/') + ".class");
+			InputStream stream = getResourceAsStream("/" + name.replace('.', '/') + ".class");
 			CustomClassNode node = CustomClassNode.loadFromStream(stream);
 			filament.classes.put(name, node);
 		}
 	}
 
+	public void loadClasses(Class<?>[] classes) throws IOException, ClassNotFoundException {
+		for (Class<?> cls : classes) {
+			InputStream stream = getResourceAsStream("/" + cls.getName().replace('.', '/') + ".class");
+			CustomClassNode node = CustomClassNode.loadFromStream(stream);
+			filament.classes.put(cls.getName(), node);
+		}
+	}
+
 	public String[] listPackage(String packageName) throws IOException, ClassNotFoundException {
 		ArrayList<String> classes = new ArrayList<String>();
-		URL packageURL = FilamentClassLoader.class.getResource("/" + packageName.replace('.', '/'));
+		URL packageURL = getResource("/" + packageName.replace('.', '/'));
 		if (packageURL.getProtocol().equals("file")) {
 			File packageFolder = new File(packageURL.getFile());
 			for (File f : packageFolder.listFiles()) {
@@ -151,7 +162,7 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 		}
 	}
 
-	protected byte[] getClassBytes(String name) {
+	public byte[] getClassBytes(String name) {
 		CustomClassNode node = filament.classes.get(name);
 
 		if (node != null) {
@@ -177,7 +188,16 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 		try {
 			stream = parent.getResourceAsStream(name);
 		} catch (Throwable e) {}
-		return stream;
+		if (stream != null) return stream;
+		try {
+			stream = FilamentClassLoader.class.getResourceAsStream(name);
+		} catch (Throwable e) {}
+		if (stream != null) return stream;
+		return getResourceAsStreamAlt(name);
+	}
+	
+	public InputStream getResourceAsStreamAlt(String name) {
+		return null;
 	}
 
 	public URL findResource(String name) {
@@ -192,8 +212,16 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 			try {
 				url = parent.getResource(name);
 			} catch (Throwable e) {}
+			if (url != null) return url;
+			try {
+				url = FilamentClassLoader.class.getResource(name);
+			} catch (Throwable e) {}
 			return url;
 		}
+		return findResourceFromBuffer(name, buf);
+	}
+	
+	public URL findResourceFromBuffer(String name, byte[] buf) {
 		final InputStream stream = new ByteArrayInputStream(buf);
 		URLStreamHandler handler = new URLStreamHandler() {
 			protected URLConnection openConnection(URL url) throws IOException {
