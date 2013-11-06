@@ -1,5 +1,7 @@
 package org.frustra.filament.hooking;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -15,18 +17,24 @@ public class Hooks {
 	
 	public static void outputHooks() {
 		try {
+			ArrayList<String> output = new ArrayList<String>();
 			for (Entry<String, Object> entry : hooks.entrySet()) {
 				String key = entry.getKey();
 				Object value = entry.getValue();
 				if (value instanceof CustomClassNode) {
-					System.out.println(key + " = " + ((CustomClassNode) value).name);
+					output.add(key + " = " + ((CustomClassNode) value).name);
 				} else if (value instanceof FieldNode) {
-					System.out.println(key + " = " + ((FieldNode) value).name);
+					output.add(key + " = " + ((FieldNode) value).name);
 				} else if (value instanceof MethodNode) {
-					System.out.println(key + " = " + ((MethodNode) value).name + ((MethodNode) value).desc);
+					output.add(key + " = " + ((MethodNode) value).name + ((MethodNode) value).desc);
 				} else {
-					System.out.println(key + " = " + value);
+					output.add(key + " = " + value);
 				}
+			}
+			String[] output2 = output.toArray(new String[0]);
+			Arrays.sort(output2);
+			for (String line : output2) {
+				System.out.println(line);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
