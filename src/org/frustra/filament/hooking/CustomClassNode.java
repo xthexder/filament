@@ -32,6 +32,11 @@ public class CustomClassNode extends ClassNode {
 		node.access |= Opcodes.ACC_PUBLIC;
 		return node;
 	}
+	
+	public boolean matches(String hook) throws BadHookException {
+		CustomClassNode node = Hooks.getClass(hook);
+		return this.equals(node);
+	}
 
 	public boolean equals(Object obj) {
 		if (obj == null) return false;

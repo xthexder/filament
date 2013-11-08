@@ -41,13 +41,13 @@ public class Hooks {
 		}
 	}
 
-	public static CustomClassNode getClass(String name) { return (CustomClassNode) get(name); }
-	public static String getClassName(String name) { return ((CustomClassNode) get(name)).name; }
-	public static FieldNode getField(String name) { return (FieldNode) get(name); }
-	public static MethodNode getMethod(String name) { return (MethodNode) get(name); }
-	public static String getString(String name) { return (String) get(name); }
+	public static CustomClassNode getClass(String name) throws BadHookException { return (CustomClassNode) get(name); }
+	public static String getClassName(String name) throws BadHookException { return ((CustomClassNode) get(name)).name; }
+	public static FieldNode getField(String name) throws BadHookException { return (FieldNode) get(name); }
+	public static MethodNode getMethod(String name) throws BadHookException { return (MethodNode) get(name); }
+	public static String getString(String name) throws BadHookException { return (String) get(name); }
 	
-	public static Object get(String name) {
+	public static Object get(String name) throws BadHookException {
 		return hooks.get(name);
 	}
 	

@@ -10,7 +10,6 @@ import org.objectweb.asm.tree.MethodNode;
 public class AnnotationHelper {
 	public String annotation;
 	public HashMap<String, Object> values = new HashMap<String, Object>();
-	public static String hookPackage = null;
 
 	public AnnotationHelper(AnnotationNode node) {
 		annotation = Type.getType(node.desc).getClassName();

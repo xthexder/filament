@@ -8,15 +8,15 @@ import org.objectweb.asm.tree.MethodNode;
 public abstract class InstructionHook extends MethodHook {
 	protected AbstractInsnNode cInsn = null;
 
-	protected boolean match(CustomClassNode node) {
+	protected boolean match(CustomClassNode node) throws BadHookException {
 		return true;
 	}
 
-	protected boolean match(CustomClassNode node, MethodNode m) {
+	protected boolean match(CustomClassNode node, MethodNode m) throws BadHookException {
 		return true;
 	}
 	
-	protected abstract boolean match(CustomClassNode node, MethodNode m, AbstractInsnNode insn);
+	protected abstract boolean match(CustomClassNode node, MethodNode m, AbstractInsnNode insn) throws BadHookException;
 
 	protected void onComplete(CustomClassNode node) {}
 	protected void onComplete(CustomClassNode node, MethodNode m) {}

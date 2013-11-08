@@ -15,8 +15,13 @@ import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
 public class AnnotationInjector extends ClassInjector {
+	@SuppressWarnings("unchecked")
 	public boolean match(CustomClassNode node) {
-		return node.visibleAnnotations != null && node.visibleAnnotations.size() > 0;
+		if (node.visibleAnnotations != null && node.visibleAnnotations.size() > 0) return true;
+		for (MethodNode m : (List<MethodNode>) node.methods) {
+			if (m.visibleAnnotations != null && m.visibleAnnotations.size() > 0) return true;
+		}
+		return false;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -80,6 +85,7 @@ public class AnnotationInjector extends ClassInjector {
 						m.instructions.add(new InsnNode(ret.getOpcode(Opcodes.IRETURN)));
 					}
 				} catch (Exception e) {
+					System.err.println("Exception on annotation: " + anno.annotation + " : " + node.name + "." + m.name + m.desc + " : " + anno.getValue());
 					e.printStackTrace();
 				}
 			}
@@ -91,6 +97,7 @@ public class AnnotationInjector extends ClassInjector {
 					node.superName = Hooks.getClassName(anno.getValue());
 				}
 			} catch (Exception e) {
+				System.err.println("Exception on annotation: " + anno.annotation + " : " + node.name + " : " + anno.getValue());
 				e.printStackTrace();
 			}
 		}

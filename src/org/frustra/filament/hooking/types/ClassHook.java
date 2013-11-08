@@ -7,9 +7,9 @@ public abstract class ClassHook extends Hook {
 	protected CustomClassNode cNode = null;
 	protected CustomClassNode lastClass = null;
 
-	protected abstract boolean match(CustomClassNode node);
+	protected abstract boolean match(CustomClassNode node) throws BadHookException;
 
-	protected abstract void onComplete(CustomClassNode node);
+	protected abstract void onComplete(CustomClassNode node) throws BadHookException;
 
 	public void reset() {
 		super.reset();

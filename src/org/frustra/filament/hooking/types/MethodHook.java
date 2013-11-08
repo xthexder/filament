@@ -7,14 +7,14 @@ import org.objectweb.asm.tree.MethodNode;
 public abstract class MethodHook extends ClassHook {
 	protected MethodNode cMethod = null;
 
-	protected boolean match(CustomClassNode node) {
+	protected boolean match(CustomClassNode node) throws BadHookException {
 		return true;
 	}
 
-	protected abstract boolean match(CustomClassNode node, MethodNode m);
+	protected abstract boolean match(CustomClassNode node, MethodNode m) throws BadHookException;
 
-	protected void onComplete(CustomClassNode node) {}
-	protected abstract void onComplete(CustomClassNode node, MethodNode m);
+	protected void onComplete(CustomClassNode node) throws BadHookException {}
+	protected abstract void onComplete(CustomClassNode node, MethodNode m) throws BadHookException;
 
 	public void reset() {
 		super.reset();

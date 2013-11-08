@@ -7,14 +7,14 @@ import org.objectweb.asm.tree.FieldNode;
 public abstract class FieldHook extends ClassHook {
 	protected FieldNode cField = null;
 
-	protected boolean match(CustomClassNode node) {
+	protected boolean match(CustomClassNode node) throws BadHookException {
 		return true;
 	}
 
-	protected abstract boolean match(CustomClassNode node, FieldNode f);
+	protected abstract boolean match(CustomClassNode node, FieldNode f) throws BadHookException;
 
-	protected void onComplete(CustomClassNode node) {}
-	protected abstract void onComplete(CustomClassNode node, FieldNode f);
+	protected void onComplete(CustomClassNode node) throws BadHookException {}
+	protected abstract void onComplete(CustomClassNode node, FieldNode f) throws BadHookException;
 
 	public void reset() {
 		super.reset();

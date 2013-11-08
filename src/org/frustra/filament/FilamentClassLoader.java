@@ -17,7 +17,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import org.frustra.filament.hooking.CustomClassNode;
-import org.frustra.filament.injection.InjectionHandler;
+import org.frustra.filament.injection.Injection;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
@@ -166,7 +166,7 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 		CustomClassNode node = filament.classes.get(name);
 
 		if (node != null) {
-			InjectionHandler.doInjection(node);
+			Injection.injectClass(node);
 
 			ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 			node.accept(writer);
