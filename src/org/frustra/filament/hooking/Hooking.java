@@ -2,6 +2,7 @@ package org.frustra.filament.hooking;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import org.frustra.filament.FilamentStorage;
@@ -22,7 +23,7 @@ import org.objectweb.asm.tree.MethodNode;
 public class Hooking {
 	public static String hooksPackage = null;
 	
-	public static void loadHooks(String packageName) throws InstantiationException, IllegalAccessException, BadHookException, ClassNotFoundException, IOException {
+	public static void loadHooks(String packageName) throws InstantiationException, IllegalAccessException, BadHookException, ClassNotFoundException, IOException, URISyntaxException {
 		Hooking.hooksPackage = packageName;
 		String[] hooks = FilamentStorage.store.classLoader.listPackage(packageName);
 		FilamentStorage.store.passTwoHooks = 0;

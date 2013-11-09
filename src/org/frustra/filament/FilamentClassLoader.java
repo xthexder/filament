@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
@@ -57,10 +58,10 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 		if (url != null) addURL(url);
 	}
 
-	public void loadPackage(String packageName) throws IOException, ClassNotFoundException {
+	public void loadPackage(String packageName) throws IOException, ClassNotFoundException, URISyntaxException {
 		String[] classes = listPackage(packageName);
 		for (String name : classes) {
-			InputStream stream = getResourceAsStream("/" + name.replace('.', '/') + ".class");
+			InputStream stream = getResourceAsStream(name.replace('.', '/') + ".class");
 			CustomClassNode node = CustomClassNode.loadFromStream(stream);
 			filament.classes.put(name, node);
 		}
@@ -68,16 +69,20 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 
 	public void loadClasses(Class<?>[] classes) throws IOException, ClassNotFoundException {
 		for (Class<?> cls : classes) {
-			InputStream stream = getResourceAsStream("/" + cls.getName().replace('.', '/') + ".class");
+			InputStream stream = getResourceAsStream(cls.getName().replace('.', '/') + ".class");
 			CustomClassNode node = CustomClassNode.loadFromStream(stream);
 			filament.classes.put(cls.getName(), node);
 		}
 	}
 
-	public String[] listPackage(String packageName) throws IOException, ClassNotFoundException {
+	public String[] listPackage(String packageName) throws IOException, ClassNotFoundException, URISyntaxException {
 		ArrayList<String> classes = new ArrayList<String>();
-		URL packageURL = getResource("/" + packageName.replace('.', '/'));
-		if (packageURL.getProtocol().equals("file")) {
+		URL codeRoot = FilamentClassLoader.class.getProtectionDomain().getCodeSource().getLocation();
+		if (codeRoot == null) throw new ClassNotFoundException("Couldn't determine code root!");
+		File root = new File(codeRoot.toURI().getPath());
+		if (root.isDirectory()) {
+			URL packageURL = getResource(packageName.replace('.', '/'));
+			if (packageURL == null) throw new ClassNotFoundException("Couldn't load package location: " + packageName);
 			File packageFolder = new File(packageURL.getFile());
 			for (File f : packageFolder.listFiles()) {
 				String name = f.getName();
@@ -88,10 +93,8 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 					classes.add(reader.getClassName().replace('/', '.'));
 				}
 			}
-		} else if (packageURL.getProtocol().equals("jar")) {
-			String jarPath = packageURL.getFile();
-			jarPath = jarPath.substring(5, jarPath.indexOf("!/"));
-			JarFile file = new JarFile(jarPath);
+		} else if (root.getAbsolutePath().endsWith(".jar")) {
+			JarFile file = new JarFile(root);
 			Enumeration<? extends JarEntry> entries = file.entries();
 			while (entries.hasMoreElements()) {
 				JarEntry entry = entries.nextElement();
@@ -108,7 +111,7 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 			}
 			file.close();
 		} else {
-			System.out.println("Unsupported protocol: " + packageURL.getProtocol());
+			System.out.println("Unknown source type: " + root.getAbsolutePath());
 		}
 		return classes.toArray(new String[0]);
 	}
@@ -190,7 +193,7 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 		} catch (Throwable e) {}
 		if (stream != null) return stream;
 		try {
-			stream = FilamentClassLoader.class.getResourceAsStream(name);
+			stream = FilamentClassLoader.class.getResourceAsStream("/" + name);
 		} catch (Throwable e) {}
 		if (stream != null) return stream;
 		return getResourceAsStreamAlt(name);
@@ -203,8 +206,8 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 	public URL findResource(String name) {
 		byte[] buf = null;
 		if (name.endsWith(".class")) buf = getClassBytes(name.substring(0, name.length() - 6).replace('/', '.'));
-		URL url = null;
 		if (buf == null) {
+			URL url = null;
 			try {
 				url = super.findResource(name);
 			} catch (Throwable e) {}
@@ -214,7 +217,7 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 			} catch (Throwable e) {}
 			if (url != null) return url;
 			try {
-				url = FilamentClassLoader.class.getResource(name);
+				url = FilamentClassLoader.class.getResource("/" + name);
 			} catch (Throwable e) {}
 			return url;
 		}

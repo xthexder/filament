@@ -1,13 +1,14 @@
 package org.frustra.filament.injection;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 import org.frustra.filament.FilamentStorage;
 import org.frustra.filament.hooking.CustomClassNode;
 import org.frustra.filament.injection.annotations.AnnotationInjector;
 
 public class Injection {
-	public static void loadInjectors(String packageName) throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException {
+	public static void loadInjectors(String packageName) throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException, URISyntaxException {
 		String[] injectors = FilamentStorage.store.classLoader.listPackage(packageName);
 		FilamentStorage.store.injectors.clear();
 		FilamentStorage.store.injectors.add(new AnnotationInjector());
