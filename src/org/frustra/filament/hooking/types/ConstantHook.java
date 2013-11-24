@@ -11,8 +11,9 @@ public abstract class ConstantHook extends ClassHook {
 	}
 
 	protected abstract boolean match(FilamentClassNode node, String constant);
-	
+
 	protected void onComplete(FilamentClassNode node) {}
+
 	protected abstract void onComplete(FilamentClassNode node, String constant);
 
 	public void reset() {

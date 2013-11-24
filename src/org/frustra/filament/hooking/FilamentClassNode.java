@@ -33,7 +33,7 @@ public class FilamentClassNode extends ClassNode {
 		node.access |= Opcodes.ACC_PUBLIC;
 		return node;
 	}
-	
+
 	public boolean matches(String hook) throws BadHookException {
 		FilamentClassNode node = Hooks.getClass(hook);
 		return this.equals(node);

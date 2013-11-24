@@ -25,6 +25,8 @@ import org.objectweb.asm.tree.MethodNode;
  * @see FilamentClassNode
  */
 public final class HookUtil {
+	private HookUtil() {}
+	
 	/**
 	 * Get the java reflected class associated with an ASM {@link Type}.
 	 * 
@@ -47,7 +49,7 @@ public final class HookUtil {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Get the java reflected class associated with a class hook.
 	 * 
@@ -74,7 +76,7 @@ public final class HookUtil {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Get the java reflected field associated with a field hook.
 	 * 
@@ -226,7 +228,6 @@ public final class HookUtil {
 		return a.name.equals(b.name) && a.desc.equals(b.desc);
 	}
 
-
 	/**
 	 * Compare a field hook with a {@link FieldNode} to see if they have the same signature.
 	 * 
@@ -271,7 +272,7 @@ public final class HookUtil {
 	public static boolean compareType(Type type, String hook) throws BadHookException {
 		return Hooks.getClass(hook).equals(type);
 	}
-	
+
 	public static MethodInsnNode createMethodInsnNode(int opcode, Object cls, String name, Object ret, Object... params) throws BadHookException {
 		if (cls == null || name == null || ret == null) return null;
 		String clsName = null;
@@ -313,18 +314,19 @@ public final class HookUtil {
 		if (desc == null) throw new NullPointerException("Method descriptor resolved to null!");
 		return new MethodInsnNode(opcode, clsName, name, desc);
 	}
-	
+
 	public static MethodInsnNode createMethodInsnNode(int opcode, String hook) throws BadHookException {
 		FilamentClassNode node = Hooks.getClass(hook.substring(0, hook.lastIndexOf('.')));
 		MethodNode m = Hooks.getMethod(hook);
 		return new MethodInsnNode(opcode, node.name, m.name, m.desc);
 	}
-	
+
 	public static FieldInsnNode createFieldInsnNode(int opcode, String hook) throws BadHookException {
 		FilamentClassNode node = Hooks.getClass(hook.substring(0, hook.lastIndexOf('.')));
 		FieldNode f = Hooks.getField(hook);
 		return new FieldInsnNode(opcode, node.name, f.name, f.desc);
 	}
+
 	public static FieldInsnNode createFieldInsnNode(int opcode, Object cls, String name, Object type) throws BadHookException {
 		if (cls == null || name == null || type == null) return null;
 		String clsName = null;

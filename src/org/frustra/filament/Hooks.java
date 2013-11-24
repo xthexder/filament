@@ -25,16 +25,18 @@ import org.objectweb.asm.tree.MethodNode;
 
 /**
  * The Hooks class defines all the code for processing hooks.
- * The results of each hook can be set and read with methods in this class. 
+ * The results of each hook can be set and read with methods in this class.
  * <p>
- * Hook results are mapped to strings, and generally have one of the following formats:
- * <blockquote><pre>
+ * Hook results are mapped to strings, and generally have one of the following formats: <blockquote>
+ * 
+ * <pre>
  *     ClassName
  *     ClassName.fieldName
  *     ClassName.methodName
  *     ClassName.someProperty
- * </pre></blockquote>
- * Hooks that are prefixed with a class will automatically be handled when using utility functions within {@link HookUtil}
+ * </pre>
+ * 
+ * </blockquote> Hooks that are prefixed with a class will automatically be handled when using utility functions within {@link HookUtil}
  * 
  * @author Jacob Wirth
  * @see HookUtil
@@ -48,8 +50,10 @@ public class Hooks {
 	 * @param name the name of a hook
 	 * @return the hook's value
 	 */
-	public static final FilamentClassNode getClass(String name) { return (FilamentClassNode) get(name); }
-	
+	public static final FilamentClassNode getClass(String name) {
+		return (FilamentClassNode) get(name);
+	}
+
 	/**
 	 * Get the name of a class hook's class. See above for hook name formats.
 	 * <p>
@@ -58,32 +62,40 @@ public class Hooks {
 	 * @param name the name of a hook
 	 * @return the hook's value
 	 */
-	public static final String getClassName(String name) { return ((FilamentClassNode) get(name)).name; }
-	
+	public static final String getClassName(String name) {
+		return ((FilamentClassNode) get(name)).name;
+	}
+
 	/**
 	 * Get the value of a hook casted to a {@link FieldNode}. See above for hook name formats.
 	 * 
 	 * @param name the name of a hook
 	 * @return the hook's value
 	 */
-	public static final FieldNode getField(String name) { return (FieldNode) get(name); }
-	
+	public static final FieldNode getField(String name) {
+		return (FieldNode) get(name);
+	}
+
 	/**
 	 * Get the value of a hook casted to a {@link MethodNode}. See above for hook name formats.
 	 * 
 	 * @param name the name of a hook
 	 * @return the hook's value
 	 */
-	public static final MethodNode getMethod(String name) { return (MethodNode) get(name); }
-	
+	public static final MethodNode getMethod(String name) {
+		return (MethodNode) get(name);
+	}
+
 	/**
 	 * Get the value of a hook casted to a {@link String}. See above for hook name formats.
 	 * 
 	 * @param name the name of a hook
 	 * @return the hook's value
 	 */
-	public static final String getString(String name) { return (String) get(name); }
-	
+	public static final String getString(String name) {
+		return (String) get(name);
+	}
+
 	/**
 	 * Get the value of a hook without casting its type. See above for hook name formats.
 	 * 
@@ -93,7 +105,7 @@ public class Hooks {
 	public static final Object get(String name) {
 		return hooks.get(name);
 	}
-	
+
 	/**
 	 * Set the value of a hook. See above for hook name formats.
 	 * 
@@ -103,7 +115,7 @@ public class Hooks {
 	public static final void set(String name, Object value) {
 		hooks.put(name, value);
 	}
-	
+
 	/**
 	 * Load all hooks contained within the specified package, and run them on the global Filament instance.
 	 * A FilamentClassLoader must be created in order to initialize the Filament instance.
@@ -282,7 +294,7 @@ public class Hooks {
 			throw new BadHookException("Errors occured while processing " + hookingPass.getSimpleName(), null);
 		}
 	}
-	
+
 	private static void debugHooks() {
 		try {
 			ArrayList<String> output = new ArrayList<String>();

@@ -25,22 +25,24 @@ import org.objectweb.asm.ClassWriter;
  * FilamentClassLoader is the {@link URLClassLoader} used by filament when hooking and injecting classes.
  * It is also used for managing resources associated with those classes.
  * <p>
- * FilamentClassLoader creates a global Filament instance, which contains all the hooks, injectors, and classes loaded into it.
- * There can only be one instance of FilamentClassLoader defined per application.
+ * FilamentClassLoader creates a global Filament instance, which contains all the hooks, injectors, and classes loaded into it. There can only be one instance of FilamentClassLoader defined per application.
  * <p>
- * An example program using filament could consist of:
- * <blockquote><pre>
- *     loader = new FilamentClassLoader(true);
- *     loader.loadPackage("org.frustra.example.target");
- *     Thread.currentThread().setContextClassLoader(loader);
+ * An example program using filament could consist of: <blockquote>
  * 
- *     Hooking.loadHooks("org.frustra.example.hooks");
- *     Injection.loadInjectors("org.frustra.example.injectors");
+ * <pre>
+ * loader = new FilamentClassLoader(true);
+ * loader.loadPackage(&quot;org.frustra.example.target&quot;);
+ * Thread.currentThread().setContextClassLoader(loader);
  * 
- *     Class<?> cls = loader.loadClass("org.frustra.example.target.Main");
- *     Method entryPoint = cls.getDeclaredMethod("main", new Class[] { String[].class });
- *     entryPoint.invoke(null, new Object[] { new String[0] });
- * </pre></blockquote>
+ * Hooking.loadHooks(&quot;org.frustra.example.hooks&quot;);
+ * Injection.loadInjectors(&quot;org.frustra.example.injectors&quot;);
+ * 
+ * Class&lt;?&gt; cls = loader.loadClass(&quot;org.frustra.example.target.Main&quot;);
+ * Method entryPoint = cls.getDeclaredMethod(&quot;main&quot;, new Class[] { String[].class });
+ * entryPoint.invoke(null, new Object[] { new String[0] });
+ * </pre>
+ * 
+ * </blockquote>
  * 
  * @author Jacob Wirth
  * @see Hooks
@@ -70,7 +72,7 @@ public class FilamentClassLoader extends URLClassLoader {
 		new Filament(this, debug);
 		this.parent = parent;
 	}
-	
+
 	/**
 	 * Load the contents of a jar into the filament class loader
 	 * so that they can be hooked and injected.
@@ -91,8 +93,7 @@ public class FilamentClassLoader extends URLClassLoader {
 	 * Load the contents of a jar into the filament class loader
 	 * so that they can be hooked and injected.
 	 * <p>
-	 * If the url argument is <code>null</code>, only classes will be loaded.
-	 * This means other resources won't be available through the class loader.
+	 * If the url argument is <code>null</code>, only classes will be loaded. This means other resources won't be available through the class loader.
 	 * 
 	 * @param jar a JarFile to be loaded
 	 * @param url the URL that the JarFile was loaded from
@@ -128,7 +129,7 @@ public class FilamentClassLoader extends URLClassLoader {
 			Filament.filament.classes.put(name, node);
 		}
 	}
-	
+
 	/**
 	 * Load a list of classes into the filament class loader
 	 * so that they can be hooked and injected.
@@ -316,7 +317,7 @@ public class FilamentClassLoader extends URLClassLoader {
 		}
 		return getResourceFromBytes(name, buf);
 	}
-	
+
 	/**
 	 * Gets the URL associated with a resource.
 	 * The resource does not have to exist as an actual file on the system,

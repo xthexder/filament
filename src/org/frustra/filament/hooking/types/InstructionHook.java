@@ -15,11 +15,13 @@ public abstract class InstructionHook extends MethodHook {
 	protected boolean match(FilamentClassNode node, MethodNode m) throws BadHookException {
 		return true;
 	}
-	
+
 	protected abstract boolean match(FilamentClassNode node, MethodNode m, AbstractInsnNode insn) throws BadHookException;
 
 	protected void onComplete(FilamentClassNode node) {}
+
 	protected void onComplete(FilamentClassNode node, MethodNode m) {}
+
 	protected abstract void onComplete(FilamentClassNode node, MethodNode m, AbstractInsnNode insn);
 
 	public void reset() {

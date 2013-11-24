@@ -14,6 +14,7 @@ public abstract class FieldHook extends ClassHook {
 	protected abstract boolean match(FilamentClassNode node, FieldNode f) throws BadHookException;
 
 	protected void onComplete(FilamentClassNode node) throws BadHookException {}
+
 	protected abstract void onComplete(FilamentClassNode node, FieldNode f) throws BadHookException;
 
 	public void reset() {

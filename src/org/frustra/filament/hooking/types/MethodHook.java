@@ -14,6 +14,7 @@ public abstract class MethodHook extends ClassHook {
 	protected abstract boolean match(FilamentClassNode node, MethodNode m) throws BadHookException;
 
 	protected void onComplete(FilamentClassNode node) throws BadHookException {}
+
 	protected abstract void onComplete(FilamentClassNode node, MethodNode m) throws BadHookException;
 
 	public void reset() {
