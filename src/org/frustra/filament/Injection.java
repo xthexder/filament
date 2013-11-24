@@ -3,7 +3,7 @@ package org.frustra.filament;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import org.frustra.filament.hooking.CustomClassNode;
+import org.frustra.filament.hooking.FilamentClassNode;
 import org.frustra.filament.injection.ClassInjector;
 import org.frustra.filament.injection.annotations.AnnotationInjector;
 
@@ -21,7 +21,7 @@ public class Injection {
 		}
 	}
 
-	public static void injectClass(CustomClassNode node) {
+	public static void injectClass(FilamentClassNode node) {
 		if (node == null) return;
 		for (ClassInjector injector : Filament.filament.injectors) {
 			try {

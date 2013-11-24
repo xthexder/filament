@@ -1,33 +1,33 @@
 package org.frustra.filament.hooking.types;
 
 import org.frustra.filament.hooking.BadHookException;
-import org.frustra.filament.hooking.CustomClassNode;
+import org.frustra.filament.hooking.FilamentClassNode;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
 public abstract class InstructionHook extends MethodHook {
 	protected AbstractInsnNode cInsn = null;
 
-	protected boolean match(CustomClassNode node) throws BadHookException {
+	protected boolean match(FilamentClassNode node) throws BadHookException {
 		return true;
 	}
 
-	protected boolean match(CustomClassNode node, MethodNode m) throws BadHookException {
+	protected boolean match(FilamentClassNode node, MethodNode m) throws BadHookException {
 		return true;
 	}
 	
-	protected abstract boolean match(CustomClassNode node, MethodNode m, AbstractInsnNode insn) throws BadHookException;
+	protected abstract boolean match(FilamentClassNode node, MethodNode m, AbstractInsnNode insn) throws BadHookException;
 
-	protected void onComplete(CustomClassNode node) {}
-	protected void onComplete(CustomClassNode node, MethodNode m) {}
-	protected abstract void onComplete(CustomClassNode node, MethodNode m, AbstractInsnNode insn);
+	protected void onComplete(FilamentClassNode node) {}
+	protected void onComplete(FilamentClassNode node, MethodNode m) {}
+	protected abstract void onComplete(FilamentClassNode node, MethodNode m, AbstractInsnNode insn);
 
 	public void reset() {
 		super.reset();
 		cInsn = null;
 	}
 
-	public void doMatch(CustomClassNode node, MethodNode m, AbstractInsnNode insn) {
+	public void doMatch(FilamentClassNode node, MethodNode m, AbstractInsnNode insn) {
 		if (!valid || completed) return;
 		try {
 			if (!match(node)) return;

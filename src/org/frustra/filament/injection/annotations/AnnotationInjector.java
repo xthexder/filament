@@ -3,7 +3,7 @@ package org.frustra.filament.injection.annotations;
 import java.util.List;
 
 import org.frustra.filament.Hooks;
-import org.frustra.filament.hooking.CustomClassNode;
+import org.frustra.filament.hooking.FilamentClassNode;
 import org.frustra.filament.injection.ClassInjector;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -16,7 +16,7 @@ import org.objectweb.asm.tree.VarInsnNode;
 
 public class AnnotationInjector extends ClassInjector {
 	@SuppressWarnings("unchecked")
-	public boolean match(CustomClassNode node) {
+	public boolean match(FilamentClassNode node) {
 		if (node.visibleAnnotations != null && node.visibleAnnotations.size() > 0) return true;
 		for (MethodNode m : (List<MethodNode>) node.methods) {
 			if (m.visibleAnnotations != null && m.visibleAnnotations.size() > 0) return true;
@@ -25,7 +25,7 @@ public class AnnotationInjector extends ClassInjector {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void inject(CustomClassNode node) {
+	public void inject(FilamentClassNode node) {
 		for (MethodNode m : (List<MethodNode>) node.methods) {
 			AnnotationHelper[] annos = AnnotationHelper.getAnnotations(m);
 			for (AnnotationHelper anno : annos) {
@@ -48,7 +48,7 @@ public class AnnotationInjector extends ClassInjector {
 						m.desc = parent.desc;
 					} else if (anno.annotation.equals(ProxyMethod.class.getName())) {
 						String hook = anno.getValue();
-						CustomClassNode targetNode = Hooks.getClass(hook.substring(0, hook.lastIndexOf('.')));
+						FilamentClassNode targetNode = Hooks.getClass(hook.substring(0, hook.lastIndexOf('.')));
 						MethodNode targetMethod = Hooks.getMethod(hook);
 
 						if ((m.access & Opcodes.ACC_STATIC) == 0) {

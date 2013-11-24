@@ -2,7 +2,7 @@ package org.frustra.filament.injection.annotations;
 
 import java.util.HashMap;
 
-import org.frustra.filament.hooking.CustomClassNode;
+import org.frustra.filament.hooking.FilamentClassNode;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -20,7 +20,7 @@ public class AnnotationHelper {
 		}
 	}
 
-	public static AnnotationHelper[] getAnnotations(CustomClassNode node) {
+	public static AnnotationHelper[] getAnnotations(FilamentClassNode node) {
 		if (node == null || node.visibleAnnotations == null) return new AnnotationHelper[0];
 		AnnotationHelper[] annos = new AnnotationHelper[node.visibleAnnotations.size()];
 		for (int i = 0; i < annos.length; i++) {

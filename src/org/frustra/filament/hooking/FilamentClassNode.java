@@ -10,12 +10,12 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 
-public class CustomClassNode extends ClassNode {
+public class FilamentClassNode extends ClassNode {
 	public ArrayList<String> constants = new ArrayList<String>();
 	public ArrayList<Type> references = new ArrayList<Type>();
 
-	public static CustomClassNode loadFromStream(InputStream stream) throws IOException {
-		CustomClassNode node = new CustomClassNode();
+	public static FilamentClassNode loadFromStream(InputStream stream) throws IOException {
+		FilamentClassNode node = new FilamentClassNode();
 		ClassReader reader = new ClassReader(stream);
 		reader.accept(node, ClassReader.SKIP_DEBUG);
 		char[] buf = new char[reader.getMaxStringLength()];
@@ -35,14 +35,14 @@ public class CustomClassNode extends ClassNode {
 	}
 	
 	public boolean matches(String hook) throws BadHookException {
-		CustomClassNode node = Hooks.getClass(hook);
+		FilamentClassNode node = Hooks.getClass(hook);
 		return this.equals(node);
 	}
 
 	public boolean equals(Object obj) {
 		if (obj == null) return false;
-		if (obj instanceof CustomClassNode) {
-			return this.name.equals(((CustomClassNode) obj).name);
+		if (obj instanceof FilamentClassNode) {
+			return this.name.equals(((FilamentClassNode) obj).name);
 		} else if (obj instanceof Type) {
 			String typeName = null;
 			try {

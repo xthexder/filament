@@ -3,7 +3,7 @@ package org.frustra.filament;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.frustra.filament.hooking.CustomClassNode;
+import org.frustra.filament.hooking.FilamentClassNode;
 import org.frustra.filament.hooking.types.ClassHook;
 import org.frustra.filament.hooking.types.ConstantHook;
 import org.frustra.filament.hooking.types.FieldHook;
@@ -12,12 +12,12 @@ import org.frustra.filament.hooking.types.InstructionHook;
 import org.frustra.filament.hooking.types.MethodHook;
 import org.frustra.filament.injection.ClassInjector;
 
-public class Filament {
+public final class Filament {
 	protected static Filament filament;
 
 	protected boolean debug;
 
-	protected HashMap<String, CustomClassNode> classes = new HashMap<String, CustomClassNode>();
+	protected HashMap<String, FilamentClassNode> classes = new HashMap<String, FilamentClassNode>();
 	protected FilamentClassLoader classLoader = null;
 
 	protected int passTwoHooks = 0;

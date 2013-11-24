@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import org.frustra.filament.hooking.CustomClassNode;
+import org.frustra.filament.hooking.FilamentClassNode;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
@@ -103,7 +103,7 @@ public class FilamentClassLoader extends URLClassLoader {
 		while (entries.hasMoreElements()) {
 			JarEntry entry = entries.nextElement();
 			if (entry != null && entry.getName().endsWith(".class")) {
-				CustomClassNode node = CustomClassNode.loadFromStream(jar.getInputStream(entry));
+				FilamentClassNode node = FilamentClassNode.loadFromStream(jar.getInputStream(entry));
 				String name = node.name.replaceAll("/", ".");
 				Filament.filament.classes.put(name, node);
 			}
@@ -124,7 +124,7 @@ public class FilamentClassLoader extends URLClassLoader {
 		for (String name : classes) {
 			InputStream stream = getResourceAsStream(name.replace('.', '/') + ".class");
 			if (stream == null) throw new IOException("Couldn't find resource: " + name);
-			CustomClassNode node = CustomClassNode.loadFromStream(stream);
+			FilamentClassNode node = FilamentClassNode.loadFromStream(stream);
 			Filament.filament.classes.put(name, node);
 		}
 	}
@@ -140,7 +140,7 @@ public class FilamentClassLoader extends URLClassLoader {
 		for (Class<?> cls : classes) {
 			InputStream stream = getResourceAsStream(cls.getName().replace('.', '/') + ".class");
 			if (stream == null) throw new IOException("Couldn't find resource: " + cls.getName());
-			CustomClassNode node = CustomClassNode.loadFromStream(stream);
+			FilamentClassNode node = FilamentClassNode.loadFromStream(stream);
 			Filament.filament.classes.put(cls.getName(), node);
 		}
 	}
@@ -264,7 +264,7 @@ public class FilamentClassLoader extends URLClassLoader {
 	 * @return a byte array representing the class
 	 */
 	public final byte[] getClassBytes(String name) {
-		CustomClassNode node = Filament.filament.classes.get(name);
+		FilamentClassNode node = Filament.filament.classes.get(name);
 
 		if (node != null) {
 			Injection.injectClass(node);

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.frustra.filament.hooking.BadHookException;
-import org.frustra.filament.hooking.CustomClassNode;
+import org.frustra.filament.hooking.FilamentClassNode;
 import org.frustra.filament.hooking.types.ClassHook;
 import org.frustra.filament.hooking.types.ConstantHook;
 import org.frustra.filament.hooking.types.FieldHook;
@@ -43,22 +43,22 @@ public class Hooks {
 	private static HashMap<String, Object> hooks = new HashMap<String, Object>();
 
 	/**
-	 * Get the value of a hook casted to a {@link CustomClassNode}. See above for hook name formats.
+	 * Get the value of a hook casted to a {@link FilamentClassNode}. See above for hook name formats.
 	 * 
 	 * @param name the name of a hook
 	 * @return the hook's value
 	 */
-	public static final CustomClassNode getClass(String name) { return (CustomClassNode) get(name); }
+	public static final FilamentClassNode getClass(String name) { return (FilamentClassNode) get(name); }
 	
 	/**
 	 * Get the name of a class hook's class. See above for hook name formats.
 	 * <p>
-	 * The hook's value must be a {@link CustomClassNode}.
+	 * The hook's value must be a {@link FilamentClassNode}.
 	 * 
 	 * @param name the name of a hook
 	 * @return the hook's value
 	 */
-	public static final String getClassName(String name) { return ((CustomClassNode) get(name)).name; }
+	public static final String getClassName(String name) { return ((FilamentClassNode) get(name)).name; }
 	
 	/**
 	 * Get the value of a hook casted to a {@link FieldNode}. See above for hook name formats.
@@ -193,7 +193,7 @@ public class Hooks {
 	@SuppressWarnings("unchecked")
 	private static void doHookingPass(Class<?> hookingPass) throws BadHookException {
 		boolean errors = false;
-		for (CustomClassNode node : Filament.filament.classes.values()) {
+		for (FilamentClassNode node : Filament.filament.classes.values()) {
 			if (Filament.filament.classHooks.size() > 0) {
 				for (ClassHook hook : Filament.filament.classHooks) {
 					if (hookingPass.isInstance(hook)) {
@@ -289,8 +289,8 @@ public class Hooks {
 			for (Entry<String, Object> entry : hooks.entrySet()) {
 				String key = entry.getKey();
 				Object value = entry.getValue();
-				if (value instanceof CustomClassNode) {
-					output.add(key + " = " + ((CustomClassNode) value).name);
+				if (value instanceof FilamentClassNode) {
+					output.add(key + " = " + ((FilamentClassNode) value).name);
 				} else if (value instanceof FieldNode) {
 					output.add(key + " = " + ((FieldNode) value).name);
 				} else if (value instanceof MethodNode) {
