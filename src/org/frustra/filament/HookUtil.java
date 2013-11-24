@@ -190,7 +190,7 @@ public final class HookUtil {
 	 * @param node the name of the {@link FilamentClassNode} containing the field
 	 * @param name the name of a field
 	 * @param desc the ASM description of the field's type
-	 * @return
+	 * @return the {@link FieldNode} with the specified name and description
 	 */
 	public static FieldNode getFieldNode(String node, String name, String desc) {
 		FilamentClassNode node2 = getClassNode(node);
@@ -204,7 +204,7 @@ public final class HookUtil {
 	 * @param node the {@link FilamentClassNode} containing the field
 	 * @param name the name of a field
 	 * @param desc the ASM description of the field's type
-	 * @return
+	 * @return the {@link FieldNode} with the specified name and description
 	 */
 	@SuppressWarnings("unchecked")
 	public static FieldNode getFieldNode(FilamentClassNode node, String name, String desc) {
