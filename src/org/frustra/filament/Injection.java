@@ -1,21 +1,21 @@
-package org.frustra.filament.injection;
+package org.frustra.filament;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import org.frustra.filament.FilamentStorage;
 import org.frustra.filament.hooking.CustomClassNode;
+import org.frustra.filament.injection.ClassInjector;
 import org.frustra.filament.injection.annotations.AnnotationInjector;
 
 public class Injection {
 	public static void loadInjectors(String packageName) throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException, URISyntaxException {
-		String[] injectors = FilamentStorage.store.classLoader.listPackage(packageName);
-		FilamentStorage.store.injectors.clear();
-		FilamentStorage.store.injectors.add(new AnnotationInjector());
+		String[] injectors = Filament.filament.classLoader.listPackage(packageName);
+		Filament.filament.injectors.clear();
+		Filament.filament.injectors.add(new AnnotationInjector());
 		for (String name : injectors) {
-			Class<?> cls = FilamentStorage.store.classLoader.loadClass(name);
-			FilamentStorage.store.injectors.add((ClassInjector) cls.newInstance());
-			if (FilamentStorage.store.debug) {
+			Class<?> cls = Filament.filament.classLoader.loadClass(name);
+			Filament.filament.injectors.add((ClassInjector) cls.newInstance());
+			if (Filament.filament.debug) {
 				System.out.println("Loaded Injector: " + cls.getSimpleName());
 			}
 		}
@@ -23,7 +23,7 @@ public class Injection {
 
 	public static void injectClass(CustomClassNode node) {
 		if (node == null) return;
-		for (ClassInjector injector : FilamentStorage.store.injectors) {
+		for (ClassInjector injector : Filament.filament.injectors) {
 			try {
 				injector.doInject(node);
 			} catch (Throwable e) {

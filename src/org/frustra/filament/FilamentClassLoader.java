@@ -18,25 +18,67 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import org.frustra.filament.hooking.CustomClassNode;
-import org.frustra.filament.injection.Injection;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
-public abstract class FilamentClassLoader extends URLClassLoader {
-	public FilamentStorage filament;
+/**
+ * FilamentClassLoader is the {@link URLClassLoader} used by filament when hooking and injecting classes.
+ * It is also used for managing resources associated with those classes.
+ * <p>
+ * FilamentClassLoader creates a global Filament instance, which contains all the hooks, injectors, and classes loaded into it.
+ * There can only be one instance of FilamentClassLoader defined per application.
+ * <p>
+ * An example program using filament could consist of:
+ * <blockquote><pre>
+ *     loader = new FilamentClassLoader(true);
+ *     loader.loadPackage("org.frustra.example.target");
+ *     Thread.currentThread().setContextClassLoader(loader);
+ * 
+ *     Hooking.loadHooks("org.frustra.example.hooks");
+ *     Injection.loadInjectors("org.frustra.example.injectors");
+ * 
+ *     Class<?> cls = loader.loadClass("org.frustra.example.target.Main");
+ *     Method entryPoint = cls.getDeclaredMethod("main", new Class[] { String[].class });
+ *     entryPoint.invoke(null, new Object[] { new String[0] });
+ * </pre></blockquote>
+ * 
+ * @author Jacob Wirth
+ * @see Hooks
+ * @see Injection
+ */
+public class FilamentClassLoader extends URLClassLoader {
 	private ClassLoader parent;
+	private HashMap<String, Class<?>> loaded = new HashMap<String, Class<?>>();
 
-	public FilamentClassLoader(boolean debug) throws IOException {
+	/**
+	 * Create a FilamentClassLoader
+	 * 
+	 * @param debug <code>true</code> if filament should log hooking and injection info
+	 */
+	public FilamentClassLoader(boolean debug) {
 		this(debug, FilamentClassLoader.class.getClassLoader());
 	}
 
-	public FilamentClassLoader(boolean debug, ClassLoader parent) throws IOException {
+	/**
+	 * Create a FilamentClassLoader with the specified parent
+	 * 
+	 * @param debug <code>true</code> if filament should log hooking and injection info
+	 * @param parent a ClassLoader to be set as the parent
+	 */
+	public FilamentClassLoader(boolean debug, ClassLoader parent) {
 		super(new URL[0]);
-		this.filament = new FilamentStorage(this, debug);
+		new Filament(this, debug);
 		this.parent = parent;
 	}
 	
-	public void loadJar(File jarFile) throws IOException {
+	/**
+	 * Load the contents of a jar into the filament class loader
+	 * so that they can be hooked and injected.
+	 * 
+	 * @param jarFile a jar to be loaded
+	 * @throws IOException if the jar couldn't be loaded
+	 */
+	public final void loadJar(File jarFile) throws IOException {
 		JarFile jar = new JarFile(jarFile);
 		try {
 			loadJar(jar, jarFile.toURI().toURL());
@@ -45,41 +87,82 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 		}
 	}
 
-	public void loadJar(JarFile jar, URL url) throws IOException {
+	/**
+	 * Load the contents of a jar into the filament class loader
+	 * so that they can be hooked and injected.
+	 * <p>
+	 * If the url argument is <code>null</code>, only classes will be loaded.
+	 * This means other resources won't be available through the class loader.
+	 * 
+	 * @param jar a JarFile to be loaded
+	 * @param url the URL that the JarFile was loaded from
+	 * @throws IOException if the jar couldn't be loaded
+	 */
+	public final void loadJar(JarFile jar, URL url) throws IOException {
 		Enumeration<JarEntry> entries = jar.entries();
 		while (entries.hasMoreElements()) {
 			JarEntry entry = entries.nextElement();
 			if (entry != null && entry.getName().endsWith(".class")) {
 				CustomClassNode node = CustomClassNode.loadFromStream(jar.getInputStream(entry));
 				String name = node.name.replaceAll("/", ".");
-				filament.classes.put(name, node);
+				Filament.filament.classes.put(name, node);
 			}
 		}
 		if (url != null) addURL(url);
 	}
 
-	public void loadPackage(String packageName) throws IOException, ClassNotFoundException, URISyntaxException {
+	/**
+	 * Load the classes contained within a package into the filament class loader
+	 * so that they can be hooked and injected.
+	 * 
+	 * @param packageName a String representing the name of a package
+	 * @throws IOException if a class can't be read
+	 * @throws ClassNotFoundException if the package couldn't be resolved
+	 */
+	public final void loadPackage(String packageName) throws IOException, ClassNotFoundException {
 		String[] classes = listPackage(packageName);
 		for (String name : classes) {
 			InputStream stream = getResourceAsStream(name.replace('.', '/') + ".class");
+			if (stream == null) throw new IOException("Couldn't find resource: " + name);
 			CustomClassNode node = CustomClassNode.loadFromStream(stream);
-			filament.classes.put(name, node);
+			Filament.filament.classes.put(name, node);
 		}
 	}
-
-	public void loadClasses(Class<?>[] classes) throws IOException, ClassNotFoundException {
+	
+	/**
+	 * Load a list of classes into the filament class loader
+	 * so that they can be hooked and injected.
+	 * 
+	 * @param classes an array of classes to be loaded
+	 * @throws IOException if a class can't be read
+	 */
+	public final void loadClasses(Class<?>[] classes) throws IOException {
 		for (Class<?> cls : classes) {
 			InputStream stream = getResourceAsStream(cls.getName().replace('.', '/') + ".class");
+			if (stream == null) throw new IOException("Couldn't find resource: " + cls.getName());
 			CustomClassNode node = CustomClassNode.loadFromStream(stream);
-			filament.classes.put(cls.getName(), node);
+			Filament.filament.classes.put(cls.getName(), node);
 		}
 	}
 
-	public String[] listPackage(String packageName) throws IOException, ClassNotFoundException, URISyntaxException {
+	/**
+	 * List the names of the classes contained within a package
+	 * 
+	 * @param packageName a String representing the name of a package
+	 * @return an array containing the full name of each class as a String
+	 * @throws IOException if a class can't be read
+	 * @throws ClassNotFoundException if the package couldn't be resolved
+	 */
+	public final String[] listPackage(String packageName) throws IOException, ClassNotFoundException {
 		ArrayList<String> classes = new ArrayList<String>();
 		URL codeRoot = FilamentClassLoader.class.getProtectionDomain().getCodeSource().getLocation();
 		if (codeRoot == null) throw new ClassNotFoundException("Couldn't determine code root!");
-		File root = new File(codeRoot.toURI().getPath());
+		File root = null;
+		try {
+			root = new File(codeRoot.toURI().getPath());
+		} catch (URISyntaxException e) {
+			throw new ClassNotFoundException("Couldn't determine code root!");
+		}
 		if (root.isDirectory()) {
 			URL packageURL = getResource(packageName.replace('.', '/'));
 			if (packageURL == null) throw new ClassNotFoundException("Couldn't load package location: " + packageName);
@@ -116,7 +199,7 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 		return classes.toArray(new String[0]);
 	}
 
-	protected Class<?> getPrimitiveType(String name) throws ClassNotFoundException {
+	private Class<?> getPrimitiveType(String name) throws ClassNotFoundException {
 		if (name.equals("byte") || name.equals("B")) return byte.class;
 		if (name.equals("short") || name.equals("S")) return short.class;
 		if (name.equals("int") || name.equals("I")) return int.class;
@@ -130,9 +213,7 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 		throw new ClassNotFoundException(name);
 	}
 
-	HashMap<String, Class<?>> loaded = new HashMap<String, Class<?>>();
-
-	public Class<?> loadClass(String name) throws ClassNotFoundException {
+	public final Class<?> loadClass(String name) throws ClassNotFoundException {
 		Class<?> cls = loaded.get(name);
 		if (cls == null) {
 			cls = defineClass(name);
@@ -141,7 +222,17 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 		return cls;
 	}
 
-	protected abstract Class<?> defineClass(String name, byte[] buf);
+	/**
+	 * Define a class from a byte array.
+	 * Can be overridden to manually set the ProtectionDomain.
+	 * 
+	 * @param name the name of a class to define
+	 * @param buf the bytes representing a class
+	 * @return the java Class represented by the byte array
+	 */
+	protected Class<?> defineClass(String name, byte[] buf) {
+		return defineClass(name, buf, 0, buf.length);
+	}
 
 	private Class<?> defineClass(String name) throws ClassNotFoundException {
 		if (name == null) return null;
@@ -165,8 +256,15 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 		}
 	}
 
-	public byte[] getClassBytes(String name) {
-		CustomClassNode node = filament.classes.get(name);
+	/**
+	 * Get the bytes representing a class.
+	 * If the class has relevant injectors, they will be run on the class.
+	 * 
+	 * @param name the name of a class
+	 * @return a byte array representing the class
+	 */
+	public final byte[] getClassBytes(String name) {
+		CustomClassNode node = Filament.filament.classes.get(name);
 
 		if (node != null) {
 			Injection.injectClass(node);
@@ -195,12 +293,7 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 		try {
 			stream = FilamentClassLoader.class.getResourceAsStream("/" + name);
 		} catch (Throwable e) {}
-		if (stream != null) return stream;
-		return getResourceAsStreamAlt(name);
-	}
-	
-	public InputStream getResourceAsStreamAlt(String name) {
-		return null;
+		return stream;
 	}
 
 	public URL findResource(String name) {
@@ -221,10 +314,19 @@ public abstract class FilamentClassLoader extends URLClassLoader {
 			} catch (Throwable e) {}
 			return url;
 		}
-		return findResourceFromBuffer(name, buf);
+		return getResourceFromBytes(name, buf);
 	}
 	
-	public URL findResourceFromBuffer(String name, byte[] buf) {
+	/**
+	 * Gets the URL associated with a resource.
+	 * The resource does not have to exist as an actual file on the system,
+	 * for example classes returned by getClassBytes(name).
+	 * 
+	 * @param name the name of the resource
+	 * @param buf the bytes defining the resource
+	 * @return a URL that can be used to read the resource
+	 */
+	public URL getResourceFromBytes(String name, byte[] buf) {
 		final InputStream stream = new ByteArrayInputStream(buf);
 		URLStreamHandler handler = new URLStreamHandler() {
 			protected URLConnection openConnection(URL url) throws IOException {

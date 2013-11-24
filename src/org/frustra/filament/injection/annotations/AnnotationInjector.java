@@ -2,8 +2,8 @@ package org.frustra.filament.injection.annotations;
 
 import java.util.List;
 
+import org.frustra.filament.Hooks;
 import org.frustra.filament.hooking.CustomClassNode;
-import org.frustra.filament.hooking.Hooks;
 import org.frustra.filament.injection.ClassInjector;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;

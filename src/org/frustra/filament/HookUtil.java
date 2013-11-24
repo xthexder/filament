@@ -1,4 +1,4 @@
-package org.frustra.filament.hooking;
+package org.frustra.filament;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -6,7 +6,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.frustra.filament.FilamentStorage;
+import org.frustra.filament.hooking.BadHookException;
+import org.frustra.filament.hooking.CustomClassNode;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
@@ -19,7 +20,7 @@ public class HookUtil {
 		try {
 			if (type == null) return null;
 			String baseType = type.getClassName().replaceAll("\\[\\]", "");
-			Class<?> cls = FilamentStorage.store.classLoader.loadClass(baseType);
+			Class<?> cls = Filament.filament.classLoader.loadClass(baseType);
 			int dimensions = 0;
 			try {
 				if (type.getClassName().contains("[]")) dimensions = type.getDimensions();
@@ -39,7 +40,7 @@ public class HookUtil {
 	public static Class<?> lookupClass(CustomClassNode node) {
 		try {
 			if (node == null) return null;
-			return FilamentStorage.store.classLoader.loadClass(node.name.replace('/', '.'));
+			return Filament.filament.classLoader.loadClass(node.name.replace('/', '.'));
 		} catch (Throwable e) {
 			e.printStackTrace();
 			return null;
@@ -85,7 +86,7 @@ public class HookUtil {
 	}
 
 	public static CustomClassNode getClassNode(String name) {
-		CustomClassNode node = FilamentStorage.store.classes.get(name.replace('.', '/'));
+		CustomClassNode node = Filament.filament.classes.get(name.replace('.', '/'));
 		return node;
 	}
 
