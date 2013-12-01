@@ -23,7 +23,7 @@ import org.objectweb.asm.tree.MethodNode;
 /**
  * The Hooks class defines all the code for processing hooks.
  * Each hook can be set and read with methods in this class.
- * Hooks are generally defined by a {@link HookProvder}, which will set their value based on a matched class, method, field, etc...
+ * Hooks are generally defined by a {@link HookProvider}, which will set their value based on a matched class, method, field, etc...
  * <p>
  * Hook providers can be loaded by calling <code>Hooks.load(packageName)</code>, but must be loaded after a {@link FilamentClassLoader} is created.
  * <p>

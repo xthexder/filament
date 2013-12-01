@@ -4,5 +4,5 @@ git fetch origin gh-pages:gh-pages
 git checkout gh-pages
 rm -rf javadocs
 mv javadocs-tmp javadocs
-git commit -a -m "Update javadocs" && git push
+git add -A && git commit -m "Update javadocs" && git push
 git checkout master
