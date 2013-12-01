@@ -1,10 +1,13 @@
-package org.frustra.filament.injection.annotations;
+package org.frustra.filament.injection;
 
 import java.util.List;
 
 import org.frustra.filament.Hooks;
 import org.frustra.filament.hooking.FilamentClassNode;
-import org.frustra.filament.injection.ClassInjector;
+import org.frustra.filament.injection.annotations.AnnotationHelper;
+import org.frustra.filament.injection.annotations.OverrideMethod;
+import org.frustra.filament.injection.annotations.ProxyMethod;
+import org.frustra.filament.injection.annotations.ReplaceSuperClass;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -14,9 +17,9 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
-public class AnnotationInjector extends ClassInjector {
+public final class AnnotationInjector extends ClassInjector {
 	@SuppressWarnings("unchecked")
-	public boolean match(FilamentClassNode node) {
+	protected boolean match(FilamentClassNode node) {
 		if (node.visibleAnnotations != null && node.visibleAnnotations.size() > 0) return true;
 		for (MethodNode m : (List<MethodNode>) node.methods) {
 			if (m.visibleAnnotations != null && m.visibleAnnotations.size() > 0) return true;
@@ -25,12 +28,12 @@ public class AnnotationInjector extends ClassInjector {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void inject(FilamentClassNode node) {
+	protected void inject(FilamentClassNode node) {
 		for (MethodNode m : (List<MethodNode>) node.methods) {
 			AnnotationHelper[] annos = AnnotationHelper.getAnnotations(m);
 			for (AnnotationHelper anno : annos) {
 				try {
-					if (anno.annotation.equals(ReplaceSuperClass.class.getName())) {
+					if (anno.matches(ReplaceSuperClass.class)) {
 						AbstractInsnNode insn = m.instructions.getFirst();
 						while (insn != null) {
 							if (insn.getOpcode() == Opcodes.INVOKESPECIAL) {
@@ -41,12 +44,12 @@ public class AnnotationInjector extends ClassInjector {
 							}
 							insn = insn.getNext();
 						}
-					} else if (anno.annotation.equals(OverrideMethod.class.getName())) {
+					} else if (anno.matches(OverrideMethod.class)) {
 						MethodNode parent = Hooks.getMethod(anno.getValue());
 						m.access = parent.access & ~Opcodes.ACC_ABSTRACT;
 						m.name = parent.name;
 						m.desc = parent.desc;
-					} else if (anno.annotation.equals(ProxyMethod.class.getName())) {
+					} else if (anno.matches(ProxyMethod.class)) {
 						String hook = anno.getValue();
 						FilamentClassNode targetNode = Hooks.getClass(hook.substring(0, hook.lastIndexOf('.')));
 						MethodNode targetMethod = Hooks.getMethod(hook);

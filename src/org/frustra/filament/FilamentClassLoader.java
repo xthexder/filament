@@ -25,7 +25,8 @@ import org.objectweb.asm.ClassWriter;
  * FilamentClassLoader is the {@link URLClassLoader} used by filament when hooking and injecting classes.
  * It is also used for managing resources associated with those classes.
  * <p>
- * FilamentClassLoader creates a global Filament instance, which contains all the hooks, injectors, and classes loaded into it. There can only be one instance of FilamentClassLoader defined per application.
+ * FilamentClassLoader creates a global Filament instance, which contains all the hook providers, injectors, and classes loaded into it.
+ * There can only be one instance of FilamentClassLoader defined per application.
  * <p>
  * An example program using filament could consist of: <blockquote>
  * 
@@ -46,7 +47,7 @@ import org.objectweb.asm.ClassWriter;
  * 
  * @author Jacob Wirth
  * @see Hooks
- * @see Injection
+ * @see Injectors
  */
 public class FilamentClassLoader extends URLClassLoader {
 	private ClassLoader parent;
@@ -74,8 +75,7 @@ public class FilamentClassLoader extends URLClassLoader {
 	}
 
 	/**
-	 * Load the contents of a jar into the filament class loader
-	 * so that they can be hooked and injected.
+	 * Load the contents of a jar into the filament class loader so that they can be hooked and injected.
 	 * 
 	 * @param jarFile a jar to be loaded
 	 * @throws IOException if the jar couldn't be loaded
@@ -113,8 +113,8 @@ public class FilamentClassLoader extends URLClassLoader {
 	}
 
 	/**
-	 * Load the classes contained within a package into the filament class loader
-	 * so that they can be hooked and injected.
+	 * Load the classes contained within a package into the filament class loader so that they can be hooked and injected.
+	 * This function will overwrite any previously loaded classes.
 	 * 
 	 * @param packageName a String representing the name of a package
 	 * @throws IOException if a class can't be read
@@ -131,15 +131,22 @@ public class FilamentClassLoader extends URLClassLoader {
 	}
 
 	/**
-	 * Load a list of classes into the filament class loader
-	 * so that they can be hooked and injected.
+	 * Load a list of classes into the filament class loader so that they can be hooked and injected.
+	 * This function will overwrite any previously loaded classes.
 	 * 
 	 * @param classes an array of classes to be loaded
 	 * @throws IOException if a class can't be read
 	 */
 	public final void loadClasses(Class<?>[] classes) throws IOException {
 		for (Class<?> cls : classes) {
-			InputStream stream = getResourceAsStream(cls.getName().replace('.', '/') + ".class");
+			InputStream stream = null;
+			try {
+				URL root = cls.getProtectionDomain().getCodeSource().getLocation();
+				URL url = new URL(root, cls.getName().replace('.', '/') + ".class");
+				stream = url.openStream();
+			} catch (Exception e) {
+				throw new IOException("Couldn't find resource: " + cls.getName(), e);
+			}
 			if (stream == null) throw new IOException("Couldn't find resource: " + cls.getName());
 			FilamentClassNode node = FilamentClassNode.loadFromStream(stream);
 			Filament.filament.classes.put(cls.getName(), node);
@@ -156,7 +163,7 @@ public class FilamentClassLoader extends URLClassLoader {
 	 */
 	public final String[] listPackage(String packageName) throws IOException, ClassNotFoundException {
 		ArrayList<String> classes = new ArrayList<String>();
-		URL codeRoot = FilamentClassLoader.class.getProtectionDomain().getCodeSource().getLocation();
+		URL codeRoot = this.getClass().getProtectionDomain().getCodeSource().getLocation();
 		if (codeRoot == null) throw new ClassNotFoundException("Couldn't determine code root!");
 		File root = null;
 		try {
@@ -268,7 +275,7 @@ public class FilamentClassLoader extends URLClassLoader {
 		FilamentClassNode node = Filament.filament.classes.get(name);
 
 		if (node != null) {
-			Injection.injectClass(node);
+			Injectors.injectClass(node);
 
 			ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 			node.accept(writer);

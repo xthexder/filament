@@ -1,5 +1,6 @@
 package org.frustra.filament.injection.annotations;
 
+import java.lang.annotation.Annotation;
 import java.util.HashMap;
 
 import org.frustra.filament.hooking.FilamentClassNode;
@@ -11,7 +12,7 @@ public class AnnotationHelper {
 	public String annotation;
 	public HashMap<String, Object> values = new HashMap<String, Object>();
 
-	public AnnotationHelper(AnnotationNode node) {
+	private AnnotationHelper(AnnotationNode node) {
 		annotation = Type.getType(node.desc).getClassName();
 		if (node.values != null) {
 			for (int i = 0; i < node.values.size(); i += 2) {
@@ -36,6 +37,10 @@ public class AnnotationHelper {
 			annos[i] = new AnnotationHelper((AnnotationNode) m.visibleAnnotations.get(i));
 		}
 		return annos;
+	}
+	
+	public boolean matches(Class<? extends Annotation> anno) {
+		return annotation.equals(anno.getName());
 	}
 
 	public String getValue() {

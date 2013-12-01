@@ -1,9 +1,12 @@
 package org.frustra.filament.hooking.types;
 
-import org.frustra.filament.hooking.BadHookException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public interface HookingPass {
-	public void reset();
-
-	public void doComplete() throws BadHookException;
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface HookingPass {
+	int value();
 }

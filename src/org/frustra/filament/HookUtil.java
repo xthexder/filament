@@ -55,9 +55,10 @@ public final class HookUtil {
 	 * 
 	 * @param hook the name of a class hook
 	 * @return the java class described by the hook
+	 * @throws BadHookException if the specified hook is undefined or is the wrong type
 	 * @see Hooks
 	 */
-	public static Class<?> lookupClass(String hook) {
+	public static Class<?> lookupClass(String hook) throws BadHookException {
 		return lookupClass(Hooks.getClass(hook));
 	}
 
@@ -82,8 +83,10 @@ public final class HookUtil {
 	 * 
 	 * @param hook the name of a field hook
 	 * @return the java field described by the hook
+	 * @throws BadHookException if the specified hook is undefined or is the wrong type
 	 */
-	public static Field lookupField(String hook) {
+	public static Field lookupField(String hook) throws BadHookException {
+		if (!hook.contains(".")) throw new BadHookException("Field hook name is not namespaced with a class: " + hook);
 		return lookupField(Hooks.getClass(hook.substring(0, hook.lastIndexOf('.'))), Hooks.getField(hook));
 	}
 
@@ -234,6 +237,7 @@ public final class HookUtil {
 	 * @param f a {@link FieldNode}
 	 * @param hook the name of a field hook
 	 * @return <code>true</code> if both fields have the same name and ASM description
+	 * @throws BadHookException if the specified hook is undefined or is the wrong type
 	 */
 	public static boolean compareFieldNode(FieldNode f, String hook) throws BadHookException {
 		return compareFieldNode(f, Hooks.getField(hook));
@@ -257,6 +261,7 @@ public final class HookUtil {
 	 * @param m a {@link MethodNode}
 	 * @param hook the name of a method hook
 	 * @return <code>true</code> if both method have the same name and ASM description
+	 * @throws BadHookException if the specified hook is undefined or is the wrong type
 	 */
 	public static boolean compareMethodNode(MethodNode m, String hook) throws BadHookException {
 		return compareMethodNode(m, Hooks.getMethod(hook));
@@ -268,11 +273,52 @@ public final class HookUtil {
 	 * @param type an ASM {@link Type}
 	 * @param hook the name of a class hook
 	 * @return <code>true</code> if both classes have the same name and package
+	 * @throws BadHookException if the specified hook is undefined or is the wrong type
 	 */
 	public static boolean compareType(Type type, String hook) throws BadHookException {
 		return Hooks.getClass(hook).equals(type);
 	}
 
+	/**
+	 * Create an ASM {@link MethodInsnNode} from an opcode and method hook, to be used for injecting. The name of the method hook should be prefixed with its containing class.
+	 * <p>
+	 * See {@link Hooks} for more information on naming hooks.
+	 * 
+	 * @param opcode the integer opcode of the instruction to create
+	 * @param hook the name of a method hook
+	 * @return a {@link MethodInsnNode} with the specified opcode, that will call the specified method
+	 * @throws BadHookException if the specified hook is undefined or is the wrong type
+	 */
+	public static MethodInsnNode createMethodInsnNode(int opcode, String hook) throws BadHookException {
+		if (!hook.contains(".")) throw new BadHookException("Method hook name is not namespaced with a class: " + hook);
+		String node = Hooks.getClassName(hook.substring(0, hook.lastIndexOf('.')));
+		MethodNode m = Hooks.getMethod(hook);
+		return new MethodInsnNode(opcode, node, m.name, m.desc);
+	}
+
+	/**
+	 * Create an ASM {@link MethodInsnNode} from an opcode, name, and method signature, to be used for injecting.
+	 * <p>
+	 * The cls, ret, and param arguments can each be one of the following:
+	 * <pre>
+	 *     String - The name of a class hook
+	 *     Type - an ASM {@link Type}
+	 *     Class - a java class
+	 *     FilamentClassNode - a {@link FilamentClassNode} or ASM {@link ClassNode}
+	 * </pre>
+	 * 
+	 * Example:
+	 * <p>
+	 * <code>HookUtil.createMethodInsnNode(Opcodes.INVOKEVIRTUAL, String.class, "valueOf", String.class, "ClassHookName")</code>
+	 * 
+	 * @param opcode the integer opcode of the instruction to create
+	 * @param cls the class containing the method
+	 * @param name the name of a method to call
+	 * @param ret the return type of the method
+	 * @param params a list of classes matching the parameter types of the method
+	 * @return a {@link MethodInsnNode} with the specified opcode, that will call the specified method
+	 * @throws BadHookException if a specified hook is undefined or is the wrong type
+	 */
 	public static MethodInsnNode createMethodInsnNode(int opcode, Object cls, String name, Object ret, Object... params) throws BadHookException {
 		if (cls == null || name == null || ret == null) return null;
 		String clsName = null;
@@ -315,18 +361,45 @@ public final class HookUtil {
 		return new MethodInsnNode(opcode, clsName, name, desc);
 	}
 
-	public static MethodInsnNode createMethodInsnNode(int opcode, String hook) throws BadHookException {
-		FilamentClassNode node = Hooks.getClass(hook.substring(0, hook.lastIndexOf('.')));
-		MethodNode m = Hooks.getMethod(hook);
-		return new MethodInsnNode(opcode, node.name, m.name, m.desc);
-	}
-
+	/**
+	 * Create an ASM {@link FieldInsnNode} from an opcode and field hook, to be used for injecting. The name of the field hook should be prefixed with its containing class.
+	 * <p>
+	 * See {@link Hooks} for more information on naming hooks.
+	 * 
+	 * @param opcode the integer opcode of the instruction to create
+	 * @param hook the name of a field hook
+	 * @return a {@link FieldInsnNode} with the specified opcode, that will get the specified field
+	 * @throws BadHookException if a specified hook is undefined or is the wrong type
+	 */
 	public static FieldInsnNode createFieldInsnNode(int opcode, String hook) throws BadHookException {
+		if (!hook.contains(".")) throw new BadHookException("Field hook name is not namespaced with a class: " + hook);
 		FilamentClassNode node = Hooks.getClass(hook.substring(0, hook.lastIndexOf('.')));
 		FieldNode f = Hooks.getField(hook);
 		return new FieldInsnNode(opcode, node.name, f.name, f.desc);
 	}
-
+	
+	/**
+	 * Create an ASM {@link FieldInsnNode} from an opcode, name, and field signature, to be used for injecting.
+	 * <p>
+	 * The cls and type arguments can each be one of the following:
+	 * <pre>
+	 *     String - The name of a class hook
+	 *     Type - an ASM {@link Type}
+	 *     Class - a java class
+	 *     FilamentClassNode - a {@link FilamentClassNode} or ASM {@link ClassNode}
+	 * </pre>
+	 * 
+	 * Example:
+	 * <p>
+	 * <code>HookUtil.createFieldInsnNode(Opcodes.GETSTATIC, Opcodes.class, "ALOAD", Type.INT_TYPE)</code>
+	 * 
+	 * @param opcode the integer opcode of the instruction to create
+	 * @param cls the class containing the field
+	 * @param name the name of a field to get
+	 * @param type the class matching the field's type
+	 * @return a {@link FieldInsnNode} with the specified opcode, that will get the specified field
+	 * @throws BadHookException if the specified hook is undefined or is the wrong type
+	 */
 	public static FieldInsnNode createFieldInsnNode(int opcode, Object cls, String name, Object type) throws BadHookException {
 		if (cls == null || name == null || type == null) return null;
 		String clsName = null;
