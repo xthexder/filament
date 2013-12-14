@@ -92,6 +92,16 @@ public class FilamentClassNode extends ClassNode {
 		FilamentClassNode node = Hooks.getClass(hook);
 		return this.equals(node);
 	}
+	
+	/**
+	 * Get the ASM {@link Type} of this class.
+	 * 
+	 * @return an ASM {@link Type} representing this class. 
+	 * @see Type
+	 */
+	public Type getType() {
+		return Type.getObjectType(name);
+	}
 
 	public boolean equals(Object obj) {
 		if (obj == null) return false;

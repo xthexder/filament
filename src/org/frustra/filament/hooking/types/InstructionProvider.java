@@ -17,9 +17,9 @@ public abstract class InstructionProvider extends MethodProvider {
 	}
 
 	public abstract boolean match(FilamentClassNode node, MethodNode m, AbstractInsnNode insn) throws BadHookException;
-	protected void complete(FilamentClassNode node) {}
-	protected void complete(FilamentClassNode node, MethodNode m) {}
-	protected abstract void complete(FilamentClassNode node, MethodNode m, AbstractInsnNode insn);
+	protected void complete(FilamentClassNode node) throws BadHookException {}
+	protected void complete(FilamentClassNode node, MethodNode m) throws BadHookException {}
+	protected abstract void complete(FilamentClassNode node, MethodNode m, AbstractInsnNode insn) throws BadHookException;
 
 	public void reset() {
 		super.reset();
