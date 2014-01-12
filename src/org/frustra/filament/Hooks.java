@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.frustra.filament.hooking.BadHookException;
 import org.frustra.filament.hooking.FilamentClassNode;
@@ -79,6 +80,10 @@ public final class Hooks {
 			}
 		}
 		doHooking();
+	}
+	
+	public static Set<String> getHooks() {
+		return hooks.keySet();
 	}
 	
 	private static void addHook(HookProvider hook) {
@@ -182,7 +187,7 @@ public final class Hooks {
 		}
 	}
 
-	private static void debugHooks() {
+	public static void debugHooks() {
 		try {
 			ArrayList<String> output = new ArrayList<String>();
 			for (Entry<String, Object> entry : hooks.entrySet()) {
@@ -294,7 +299,10 @@ public final class Hooks {
 	 */
 	public static final Object get(String hook) throws BadHookException {
 		Object val = hooks.get(hook);
-		if (val == null) throw new BadHookException("Referenced undefined hook: " + hook);
+		if (val == null) {
+			System.out.println(Hooks.class.getClassLoader());
+			throw new BadHookException("Referenced undefined hook: " + hook);
+		}
 		return val;
 	}
 

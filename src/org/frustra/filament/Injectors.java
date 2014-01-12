@@ -20,36 +20,68 @@ import org.frustra.filament.injection.ClassInjector;
  * @see AnnotationInjector
  */
 public final class Injectors {
+	public static final ClassInjector annotationInjector = new AnnotationInjector();
+
 	private Injectors() {}
 	
 	/**
-	 * Load all injectors contained within the specified package into the global Filament instance.
-	 * All injectors in this package will be automatically run on any matching classes loaded through the {@link FilamentClassLoader}
-	 * The {@link AnnotationInjector} will also be loaded into the Filament instance.
-	 * A FilamentClassLoader must be created prior to loading injectors.
+	 * Register all injectors contained within the specified package into the global Filament instance.
+	 * All registered injectors in this package will be automatically run on any matching classes loaded through the {@link FilamentClassLoader}
+	 * The {@link AnnotationInjector} is automatically loaded into the Filament instance by default.
+	 * A FilamentClassLoader must be created prior to registering injectors.
 	 * <p>
-	 * An injector is any class that extends {@link ClassInjector}. Any injectors loaded with a previous call to load will be overwritten.
+	 * An injector is any class that extends {@link ClassInjector}.
 	 * 
 	 * @param packageName the name of the package containing injectors
 	 * @throws ReflectiveOperationException if the package or any classes cannot be loaded
 	 * @throws IOException if one of the injector classes could not be read
 	 * @see ClassInjector
 	 */
-	public static void load(String packageName) throws ReflectiveOperationException, IOException {
+	public static void register(String packageName) throws ReflectiveOperationException, IOException {
 		String[] injectors = Filament.filament.classLoader.listPackage(packageName);
-		Filament.filament.injectors.clear();
-		Filament.filament.injectors.add(new AnnotationInjector());
 		for (String name : injectors) {
 			Class<?> cls = Filament.filament.classLoader.loadClass(name);
 			Filament.filament.injectors.add((ClassInjector) cls.newInstance());
 			if (Filament.filament.debug) {
-				System.out.println("Loaded Injector: " + cls.getSimpleName());
+				System.out.println("Registered Injector: " + cls.getSimpleName());
+			}
+		}
+	}
+	
+	/**
+	 * Register all the listed injectors into the global Filament instance.
+	 * All registered injectors in this package will be automatically run on any matching classes loaded through the {@link FilamentClassLoader}
+	 * The {@link AnnotationInjector} is automatically loaded into the Filament instance by default.
+	 * A FilamentClassLoader must be created prior to registering injectors.
+	 * <p>
+	 * An injector is any class that extends {@link ClassInjector}.
+	 * 
+	 * @param injectors a list of injectors to register
+	 * @throws ReflectiveOperationException if any classes cannot be instantiated
+	 * @see ClassInjector
+	 */
+	public static void register(Class<?>... injectors) throws ReflectiveOperationException {
+		for (Class<?> cls : injectors) {
+			Filament.filament.injectors.add((ClassInjector) cls.newInstance());
+			if (Filament.filament.debug) {
+				System.out.println("Registered Injector: " + cls.getSimpleName());
 			}
 		}
 	}
 
-	protected static void injectClass(FilamentClassNode node) {
+	/**
+	 * Run any applicable registered injectors on the specified class.
+	 * The class will be modified in-place.
+	 * 
+	 * @param node the class to inject
+	 */
+	public static void injectClass(FilamentClassNode node) {
 		if (node == null) return;
+		try {
+			annotationInjector.doInject(node);
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
 		for (ClassInjector injector : Filament.filament.injectors) {
 			try {
 				injector.doInject(node);

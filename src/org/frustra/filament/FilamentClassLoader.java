@@ -90,6 +90,22 @@ public class FilamentClassLoader extends URLClassLoader {
 	}
 
 	/**
+	 * Load the contents of a jar into the filament class loader so that they can be hooked and injected.
+	 * 
+	 * @param jarFile a jar to be loaded
+	 * @throws IOException if the jar couldn't be loaded
+	 * @throws URISyntaxException if the jar {@link URL} is not a valid file
+	 */
+	public final void loadJar(URL jarFile) throws IOException, URISyntaxException {
+		JarFile jar = new JarFile(new File(jarFile.toURI()));
+		try {
+			loadJar(jar, jarFile);
+		} finally {
+			jar.close();
+		}
+	}
+
+	/**
 	 * Load the contents of a jar into the filament class loader
 	 * so that they can be hooked and injected.
 	 * <p>
@@ -137,7 +153,7 @@ public class FilamentClassLoader extends URLClassLoader {
 	 * @param classes an array of classes to be loaded
 	 * @throws IOException if a class can't be read
 	 */
-	public final void loadClasses(Class<?>[] classes) throws IOException {
+	public final void loadClasses(Class<?>... classes) throws IOException {
 		for (Class<?> cls : classes) {
 			InputStream stream = null;
 			try {
@@ -207,7 +223,7 @@ public class FilamentClassLoader extends URLClassLoader {
 		return classes.toArray(new String[0]);
 	}
 
-	private Class<?> getPrimitiveType(String name) throws ClassNotFoundException {
+	protected Class<?> getPrimitiveType(String name) throws ClassNotFoundException {
 		if (name.equals("byte") || name.equals("B")) return byte.class;
 		if (name.equals("short") || name.equals("S")) return short.class;
 		if (name.equals("int") || name.equals("I")) return int.class;
@@ -225,7 +241,9 @@ public class FilamentClassLoader extends URLClassLoader {
 		Class<?> cls = loaded.get(name);
 		if (cls == null) {
 			cls = defineClass(name);
-			if (cls != null) loaded.put(name, cls);
+			if (cls != null) {
+				loaded.put(name, cls);
+			}
 		}
 		return cls;
 	}
@@ -269,9 +287,9 @@ public class FilamentClassLoader extends URLClassLoader {
 	 * If the class has relevant injectors, they will be run on the class.
 	 * 
 	 * @param name the name of a class
-	 * @return a byte array representing the class
+	 * @return a byte array representing the class or <code>null</code> if the class is not loaded for modification
 	 */
-	public final byte[] getClassBytes(String name) {
+	public byte[] getClassBytes(String name) {
 		FilamentClassNode node = Filament.filament.classes.get(name);
 
 		if (node != null) {
@@ -289,6 +307,10 @@ public class FilamentClassLoader extends URLClassLoader {
 			byte[] buf = getClassBytes(name.substring(0, name.length() - 6).replace('/', '.'));
 			if (buf != null) return new ByteArrayInputStream(buf);
 		}
+		return getResourceAsStreamOriginal(name);
+	}
+	
+	public InputStream getResourceAsStreamOriginal(String name) {
 		InputStream stream = null;
 		try {
 			stream = super.getResourceAsStream(name);

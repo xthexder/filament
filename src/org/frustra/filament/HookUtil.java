@@ -37,7 +37,12 @@ public final class HookUtil {
 		try {
 			if (type == null) return null;
 			String baseType = type.getClassName().replaceAll("\\[\\]", "");
-			Class<?> cls = Filament.filament.classLoader.loadClass(baseType);
+			//Class<?> cls = Filament.filament.classLoader.loadClass(baseType);
+			Class<?> cls = null;
+			try {
+				cls = Thread.currentThread().getContextClassLoader().loadClass(baseType);
+			} catch (ClassNotFoundException e) {}
+			if (cls == null) cls = Filament.filament.classLoader.getPrimitiveType(baseType);
 			int dimensions = 0;
 			try {
 				if (type.getClassName().contains("[]")) dimensions = type.getDimensions();
@@ -71,7 +76,8 @@ public final class HookUtil {
 	public static Class<?> lookupClass(FilamentClassNode node) {
 		try {
 			if (node == null) return null;
-			return Filament.filament.classLoader.loadClass(node.name.replace('/', '.'));
+			//return Filament.filament.classLoader.loadClass(node.name.replace('/', '.'));
+			return Thread.currentThread().getContextClassLoader().loadClass(node.name.replace('/', '.'));
 		} catch (Throwable e) {
 			e.printStackTrace();
 			return null;
@@ -151,7 +157,7 @@ public final class HookUtil {
 	 * @return the {@link FilamentClassNode} with the specified name
 	 */
 	public static FilamentClassNode getClassNode(String name) {
-		FilamentClassNode node = Filament.filament.classes.get(name.replace('.', '/'));
+		FilamentClassNode node = Filament.filament.classes.get(name.replace('/', '.'));
 		return node;
 	}
 
