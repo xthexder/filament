@@ -22,6 +22,10 @@ import org.objectweb.asm.tree.ClassNode;
 public class FilamentClassNode extends ClassNode {
 	private ArrayList<String> constants = new ArrayList<String>();
 	private ArrayList<Type> references = new ArrayList<Type>();
+	
+	public FilamentClassNode() {
+		super(Opcodes.ASM5);
+	}
 
 	/**
 	 * Define a FilamentClassNode from an input stream, such as a file.
@@ -113,6 +117,8 @@ public class FilamentClassNode extends ClassNode {
 				typeName = ((Type) obj).getInternalName();
 			} catch (Exception e) {}
 			return this.name.equals(typeName);
+		} else if (obj instanceof Class) {
+			return this.name.equals(Type.getInternalName((Class<?>) obj));
 		} else return false;
 	}
 
